@@ -1,12 +1,12 @@
 import time
-
 import folium
 from jinja2 import Template
 from branca.element import MacroElement
 import pandas as pd
+import numpy as np
 from streamlit_folium import folium_static, st_folium
 import streamlit as st
-from streamlit_sortables import sort_items
+from streamlit_extras.stylable_container import stylable_container
 
 menu_content = """
 <style>
@@ -74,6 +74,21 @@ function toggleMenu() {
 }
 </script>
 """
+# Define the HTML for the web video
+video_url = "300_DL.mp4"  # Sample MP4 video link
+video_format = 'mp4'
+projects = ['Chanel', 'Dior']
+TITLE = 'MadCowMap'
+
+@st.cache_data
+def load_df():
+    #change code to load data accordingly
+    df = pd.read_csv('locations.csv')
+    return df
+
+def init_map(center=(1.352, 103.8198), zoom_start=13, map_type="OpenStreetMap"):
+    return folium.Map(location=center, zoom_start=zoom_start, tiles=map_type)
+
 def generate_stats_images(location):
     #to insert code
     stats_file1 = 'average-hourly-footfall-by-day-of-the-week.png'
@@ -128,8 +143,8 @@ def create_popup(title, text, image_links=[], video_links=[]):
         popup_content += f"<br><image width='250' height='180' controls><source src='{im_link}' type='image/{video_format}'></image><br>"
     for vid_link in video_links:
         popup_content += f"""
-            <iframe width="320" height="240" 
-            src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" 
+            <iframe width="320" height="240"
+            src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
             </iframe>
         """
@@ -140,17 +155,21 @@ def create_popup(title, text, image_links=[], video_links=[]):
     popup_content += '''</div></div>'''  # closing the div containers
     return popup_content
 
-def add_project(df, custom_logo, project_name):
+def add_project(df, custom_logo, project_name,folium_map):
     # Layer 1
     project_1 = folium.FeatureGroup(name=project_name)
     for idx, row in df.iterrows():
-        title, lat, long, write_up = row['Location'], row['Latitude'], row['Longitude'], row['Description']
-        popup_content = create_popup(title, write_up, [], [video_url])
-        #     popup_content += return_stats_html([lat,long]) #add statistics
+        popup_content = create_popup(row.Location, row.Description, [], [video_url])
+        # popup_content += return_stats_html([row.Latitude,row.Longitude]) #add statistics
         popup = folium.Popup(popup_content, max_width=300)
         customicon = folium.features.CustomIcon(custom_logo, icon_size=(30, 30))
-        folium.Marker(location=[lat, long], popup=popup, icon=customicon).add_to(project_1)
-        project_1.add_to(m)
+        folium.Marker(location=[row['Latitude'], row['Longitude']],
+                      icon=customicon,
+                      popup = popup,
+                      tooltip=f'{row.Location}').add_to(folium_map)
+        # project_1.add_to(m)
+    return folium_map
+
     #     m.get_root().html.add_child(folium.Element(f"""
     #     <script>
     #         var marker = L.marker([{lat}, {long}]).addTo(m);
@@ -203,28 +222,64 @@ class ClickForOneMarker(folium.ClickForMarker):
         super(ClickForOneMarker, self).__init__(popup)
         self._name = 'ClickForOneMarker'
 
-if 'map_center' not in st.session_state:
-    st.session_state.map_center = [1.352, 103.8198]
-    st.session_state.zoom_level =  13
-# Create a map centered at a specific latitude and longitude
-m = folium.Map(location=st.session_state.map_center, zoom_start=st.session_state.zoom_level)
+# @st.cache_data  # @st.cache_data
+def load_map():
+    # Load the map
+    map = init_map()  # init
+    df = load_df()
+    # # Multi-select widget to allow users to choose which markers to highlight
+    for proj in projects:
+        add_project(df[df['Project'] == proj], f"{proj}Circle.png" ,proj,map)
+
+    return map
+
+st.set_page_config(page_title= "MadCowMap" , page_icon='MadCow.png', layout='wide')
+#Set title
+st.markdown("""
+    <style>
+        .custom-header {
+            margin-top: 20px;  # Adjust this value to control the vertical spacing
+        }
+    </style>
+""", unsafe_allow_html=True)
+st.markdown(f"""
+    <h1 style="text-align: left; font-family: 'Abadi', sans-serif; color: #000000;">
+        {TITLE}
+    </h1>
+    <hr style="border: 2px solid #000000; width: 95%; margin: 0px auto;  margin-left: -15px;">
+""", unsafe_allow_html=True)
+st.markdown("""
+            <style>
+                   .block-container {
+                        padding-top: 1rem;
+                        padding-bottom: 0rem;
+                        padding-left: 3rem;
+                        padding-right: 3rem;
+                    }
+            </style>
+            """, unsafe_allow_html=True)
+
+
+# if 'map_center' not in st.session_state:
+#     st.session_state.map_center = [1.352, 103.8198]
+#     st.session_state.zoom_level =  13
+
 # onemap_tile_url = "	https://www.onemap.gov.sg/maps/tiles/Night_HD/{z}/{x}/{y}.png"
 # Initialize session state for selected markers
 if "selected_labels" not in st.session_state:
     st.session_state.selected_labels = []
 
-# Define the HTML for the web video
-video_url = "C:/Users/brand/OneDrive/Documents/Portfolio Documents/Marketing/300_DL.mp4"  # Sample MP4 video link
-video_format = 'mp4'
-df = pd.read_csv('locations.csv')
-projects = ['Chanel', 'Dior']
-for proj in projects:
-    add_project(df[df['Project'] == proj], f"{proj}Circle.png" ,proj)
-
 # Initialize session state if it's not already initialized
 if "selection_order" not in st.session_state:
     st.session_state.selection_order = []
-
+df = load_df()
+#create multiselection
+with st.sidebar:
+    selected_labels = st.multiselect(
+        "Select Locations",
+        options=df["Location"],
+        default=st.session_state.selection_order,  # Default to the recorded order
+    )
 #adjust multiselection location
 st.markdown("""
     <style>
@@ -236,13 +291,11 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Multi-select widget to allow users to choose which markers to highlight
-with st.sidebar:
-    selected_labels = st.multiselect(
-        "Select Locations",
-        options=df["Location"],
-        default=st.session_state.selection_order,  # Default to the recorded order
-    )
+
+m = load_map()
+#init of selected location
+if "selected_id" not in st.session_state:
+    st.session_state.selected_id = None
 
 # Create a div to inject the menu directly into the map
 m.get_root().html.add_child(folium.Element(menu_content))
@@ -258,17 +311,77 @@ for _, row in df.iterrows():
         popup_content = create_popup(row['Location'], row['Description'], [], [video_url])
         #     popup_content += return_stats_html([lat,long]) #add statistics
         popup = folium.Popup(popup_content, max_width=300)
-        customicon = folium.features.CustomIcon(f"{row['Project']}CircleHighlighted.png",icon_size=(30, 30))
-        fg.add_child(folium.Marker(location=[row['Latitude'], row['Longitude']],
+        customicon = folium.features.CustomIcon(f"{row.Project}CircleHighlighted.png",icon_size=(30, 30))
+        fg.add_child(folium.Marker(location=[row.Latitude, row.Longitude],
                                    popup=popup,
-                                   icon=customicon
+                                   icon=customicon,
+                                   tooltip=f'{row.Location}'
         ))
+        #now add in details to c
 
+st.markdown("""
+        <style>
+            .rounded-box {
+                border-radius: 15px;
+                padding: 20px;
+                background-color: #40E0D0;  # Turquoise color
+                color: #ffffff;  # White text color for better contrast
+                box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.3), -6px -6px 12px rgba(255, 255, 255, 0.5);  # Bevel effect
+                max-width: 100%;
+        </style>
+    """, unsafe_allow_html=True)
+with st.container():
+    col1, col2 = st.columns([2,3])
+    with col2:
+        map_component = st_folium(m, width=800, height=500, feature_group_to_add=fg)#, feature_group_to_add=fg
+        st.session_state.selected_id = map_component['last_object_clicked_tooltip']
+    with col1:
+        with stylable_container(
+            key="container_with_border",
+            css_styles="""
+                {
+                    border-radius: 0.5rem;
+                    padding: 100 px;
+                    background-color: lightblue;
+                    box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.3), -6px -6px 12px rgba(255, 255, 255, 0.5);
+                }
+                """,
+        ):
+            if st.session_state.selected_id is not None:
+                st.markdown(f"""
+                    <h2 style="font-family: 'Roboto', sans-serif;
+                     color: white;
+                     padding: 1.5% 1% 1.5% 3.5%;">
+                        {st.session_state.selected_id}
+                    </h2>
+                """, unsafe_allow_html=True)
+                st.markdown(f"""
+                    <p style="font-family: 'Arial', sans-serif;
+                     color: white;
+                     padding: 1.5% 1% 1.5% 3.5%;">
+                        {df.loc[df.Location == st.session_state.selected_id,'Description'].iloc[0]}
+                    </p>
+                """, unsafe_allow_html=True)
+                st.video(data='https://www.youtube.com/embed/dQw4w9WgXcQ')
+                a,b,c = st.columns([1,1,1])
+                with b:
+                    st.button('text')
+    st.markdown("""
+        <style>
+            .stTabs>div { margin-top: 0px; }  /* Remove margin between the sections */
+        </style>
+    """, unsafe_allow_html=True)
+with st.container():
+    tab1, tab2, tab3 = st.tabs(["Pax Show-up Profile", "Project Outreach", "Temp"])
+    data = np.random.randn(10, 1)
 
+    tab1.subheader("A tab with a chart")
+    tab1.line_chart(data)
+with tab2:
+    budget = st.slider("Select a budget value", min_value=0, max_value = 100, value = 50)
 
-
-sorted_items = sort_items(st.session_state.selected_labels)
+# sorted_items = sort_items(st.session_state.selected_labels)
 
 # Render the Folium map in Streamlit
-map_component = st_folium(m, width=800, height=500, key='new', feature_group_to_add=fg)
+
 
