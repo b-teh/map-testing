@@ -1,4 +1,3 @@
-import time
 import folium
 from jinja2 import Template
 from branca.element import MacroElement
@@ -7,6 +6,7 @@ import numpy as np
 from streamlit_folium import folium_static, st_folium
 import streamlit as st
 from streamlit_extras.stylable_container import stylable_container
+import streamlit_imagegrid
 
 menu_content = """
 <style>
@@ -75,9 +75,10 @@ function toggleMenu() {
 </script>
 """
 # Define the HTML for the web video
-video_url = "300_DL.mp4"  # Sample MP4 video link
+video_url = "https://www.youtube.com/watch?v=Ht_ab1Wov3E"  # Sample MP4 video link
 video_format = 'mp4'
-projects = ['Chanel', 'Dior']
+logo_url = "https://github.com/b-teh/map-testing/blob/main/MadCow.png?raw=true"
+projects = ['Mowe']
 TITLE = 'MadCowMap'
 
 @st.cache_data
@@ -133,7 +134,7 @@ def return_style_html():
 </style>'''
     return style_html
 
-def create_popup(title, text, image_links=[], video_links=[]):
+def create_popup(lat,lng,title, text, image_links=[], video_links=[]):
     popup_content = return_style_html()
     popup_content += '''<div class="popup-container">
     <div class="main-popup">'''
@@ -141,17 +142,19 @@ def create_popup(title, text, image_links=[], video_links=[]):
     popup_content += f"<p>{text}</p>"
     for im_link in image_links:
         popup_content += f"<br><image width='250' height='180' controls><source src='{im_link}' type='image/{video_format}'></image><br>"
-    for vid_link in video_links:
-        popup_content += f"""
-            <iframe width="320" height="240"
-            src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
-            </iframe>
-        """
-    popup_content += f'''<button onclick="document.getElementById('innerPopup').style.display='block';">Show Statistics</button>
-    <div id="innerPopup"  style="display:none;" class="inner-popup">
-        <h4>Key Statistics</h4>''' + generate_stats_images([0, 0]) + f'''<button onclick="document.getElementById('innerPopup').style.display='none';">Close</button>
-    </div>'''
+    # for vid_link in video_links:
+    #     popup_content += f"""
+    #         <iframe width="320" height="240"
+    #         src="{video_url}" frameborder="0"
+    #         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
+    #         </iframe>
+    #     """
+    popup_content += f'''<a href=https://www.google.com/maps?layer=c&cbll={lat},{lng}  target=blank> Street View</a>
+'''
+    # popup_content += f'''<button onclick="document.getElementById('innerPopup').style.display='block';">Show Statistics</button>
+    # <div id="innerPopup"  style="display:none;" class="inner-popup">
+    #     <h4>Key Statistics</h4>''' + generate_stats_images([0, 0]) + f'''<button onclick="document.getElementById('innerPopup').style.display='none';">Close</button>
+    # </div>'''
     popup_content += '''</div></div>'''  # closing the div containers
     return popup_content
 
@@ -159,7 +162,7 @@ def add_project(df, custom_logo, project_name,folium_map):
     # Layer 1
     project_1 = folium.FeatureGroup(name=project_name)
     for idx, row in df.iterrows():
-        popup_content = create_popup(row.Location, row.Description, [], [video_url])
+        popup_content = create_popup(row.Latitude, row.Longitude,row.Location, row.Description, [], [video_url])
         # popup_content += return_stats_html([row.Latitude,row.Longitude]) #add statistics
         popup = folium.Popup(popup_content, max_width=300)
         customicon = folium.features.CustomIcon(custom_logo, icon_size=(30, 30))
@@ -187,6 +190,7 @@ class ClickForOneMarker(folium.ClickForMarker):
     """
     Description of the tool
     """
+    #class="fa-solid fa-3x fa-street-view
     _template = Template(u"""
     {% macro header(this,kwargs) %}
         <style>
@@ -197,7 +201,7 @@ class ClickForOneMarker(folium.ClickForMarker):
     {% endmacro %}
     {% macro script(this, kwargs) %}
         const fontAwesomeIcon = L.divIcon({
-        html: '<i class="fa-solid fa-3x fa-street-view"></i> ',
+        html: '<i class="fa-solid fa-3x fa-street-view" /i>',
         iconSize: [0,0],
         iconAnchor:[15,0],
         className: 'StreetViewIcon'
@@ -210,7 +214,7 @@ class ClickForOneMarker(folium.ClickForMarker):
         new_mark.on('dblclick', function(e){ {{this._parent.get_name()}}.removeLayer(e.target)})
         var lat = e.latlng.lat.toFixed(4),
         lng = e.latlng.lng.toFixed(4);
-        new_mark.bindPopup("<a href=https://www.google.com/maps?layer=c&cbll=" + lat + "," + lng + " target=blank ><img src=streetview.png width=30></img> Street View</a>");
+        new_mark.bindPopup("<a href=https://www.google.com/maps?layer=c&cbll=" + lat + "," + lng + " target=blank> Street View</a>");
         parent.document.getElementById("latitude").value = lat;
         parent.document.getElementById("longitude").value =lng;
         };
@@ -235,29 +239,16 @@ def load_map():
 
 st.set_page_config(page_title= "MadCowMap" , page_icon='MadCow.png', layout='wide')
 #Set title
-st.markdown("""
-    <style>
-        .custom-header {
-            margin-top: 20px;  # Adjust this value to control the vertical spacing
-        }
-    </style>
-""", unsafe_allow_html=True)
+st.markdown("")
 st.markdown(f"""
+    <div style="display: flex; align-items: center;">
+    <img src = "{logo_url}" style="width: 50px; height: 50px; margin-right: 20px;">
     <h1 style="text-align: left; font-family: 'Abadi', sans-serif; color: #000000;">
         {TITLE}
     </h1>
-    <hr style="border: 2px solid #000000; width: 95%; margin: 0px auto;  margin-left: -15px;">
+    </div>
+    <hr style="border: 2px solid #000000; width: 100%; margin: 0px auto;  margin-left: 0px;">
 """, unsafe_allow_html=True)
-st.markdown("""
-            <style>
-                   .block-container {
-                        padding-top: 1rem;
-                        padding-bottom: 0rem;
-                        padding-left: 3rem;
-                        padding-right: 3rem;
-                    }
-            </style>
-            """, unsafe_allow_html=True)
 
 
 # if 'map_center' not in st.session_state:
@@ -281,15 +272,13 @@ with st.sidebar:
         default=st.session_state.selection_order,  # Default to the recorded order
     )
 #adjust multiselection location
-st.markdown("""
-    <style>
+st.markdown("""<style>
     .stMultiSelect div[role="listbox"] {
         position: absolute;
         top: 45px;  /* Adjust this value to move it below the search bar */
         z-index: 1000;
     }
-    </style>
-""", unsafe_allow_html=True)
+    </style>""", unsafe_allow_html=True)
 
 
 m = load_map()
@@ -303,6 +292,7 @@ folium.LayerControl().add_to(m)
 click_for_marker = ClickForOneMarker()
 m.add_child(click_for_marker)
 
+# Refresh for marker selection to highlight
 fg = folium.FeatureGroup(name="Markers")
 for _, row in df.iterrows():
     # Determine marker color based on whether it is selected or not
@@ -319,17 +309,21 @@ for _, row in df.iterrows():
         ))
         #now add in details to c
 
-st.markdown("""
-        <style>
-            .rounded-box {
-                border-radius: 15px;
-                padding: 20px;
-                background-color: #40E0D0;  # Turquoise color
-                color: #ffffff;  # White text color for better contrast
-                box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.3), -6px -6px 12px rgba(255, 255, 255, 0.5);  # Bevel effect
-                max-width: 100%;
-        </style>
-    """, unsafe_allow_html=True)
+# st.markdown("""
+#         <style>
+#             .rounded-box {
+#                 border-radius: 15px;
+#                 padding: 20px;
+#                 background-color: #00008B;  # Turquoise color
+#                 color: #ffffff;  # White text color for better contrast
+#                 box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.3), -6px -6px 12px rgba(255, 255, 255, 0.5);  # Bevel effect
+#                 max-width: 100%;
+#         </style>
+#     """, unsafe_allow_html=True)
+
+
+
+#create container with video and description
 with st.container():
     col1, col2 = st.columns([2,3])
     with col2:
@@ -342,7 +336,7 @@ with st.container():
                 {
                     border-radius: 0.5rem;
                     padding: 100 px;
-                    background-color: lightblue;
+                    background-color: #00008B;
                     box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.3), -6px -6px 12px rgba(255, 255, 255, 0.5);
                 }
                 """,
@@ -362,26 +356,106 @@ with st.container():
                         {df.loc[df.Location == st.session_state.selected_id,'Description'].iloc[0]}
                     </p>
                 """, unsafe_allow_html=True)
-                st.video(data='https://www.youtube.com/embed/dQw4w9WgXcQ')
+                st.video(data=video_url)
                 a,b,c = st.columns([1,1,1])
                 with b:
-                    st.button('text')
+                    st.button('textsdfsdfdgfddfgf')
+                st.markdown("")
     st.markdown("""
         <style>
             .stTabs>div { margin-top: 0px; }  /* Remove margin between the sections */
         </style>
     """, unsafe_allow_html=True)
+#create popups
+with st.expander('Flashmob'):
+    st.write('here')
+pre = 'C:/Users/brand/OneDrive/Documents/Portfolio Documents/Marketing/'
+image_urls = [
+    'https://github.com/b-teh/map-testing/blob/main/IMG-20241112-WA0010.jpg?raw=true',
+    'https://github.com/b-teh/map-testing/blob/main/IMG-20241112-WA0011.jpg?raw=true',
+    'https://github.com/b-teh/map-testing/blob/main/IMG-20241112-WA0013.jpg?raw=true',
+    'https://github.com/b-teh/map-testing/blob/main/IMG-20241112-WA0014.jpg?raw=true',
+    'https://github.com/b-teh/map-testing/blob/main/IMG-20241112-WA0015.jpg?raw=true',
+]
+n = len(image_urls)
+n_cols = 3
+i = 0
+with st.expander('Larger than Life'):
+    cols =st.columns(n_cols)
+    for im in image_urls:
+        with cols[i]:
+            st.image(im)
+        i = (i+1)%n_cols
+
+# # Initialize session state variables for the index
+# if "current_index" not in st.session_state:
+#     st.session_state.current_index = 0  # Index of the first image in the current set of images
+#
+# if "disable_next" not in st.session_state:
+#     st.session_state.disable_next = False
+# if "disable_back" not in st.session_state:
+#     st.session_state.disable_back = True
+# # Number of images to display per page
+# images_per_page = 3
+#
+# def update_vals():
+#     st.session_state['disable_back'] = (st.session_state.current_index<= 3)
+#     st.session_state['disable_next'] = ((st.session_state.current_index + images_per_page +3)>= len(image_urls))
+# disable_back = (st.session_state.current_index <= 0)
+# disable_next = (st.session_state.current_index + images_per_page >= len(image_urls))
+# with st.expander('Larger Than Life'):
+#     back_col, display1, display2, display3, next_col = st.columns([1.5,4,4,4,1.5])
+#     # Check if we are at the beginning or end of the list
+#
+#     # Add images inside the scrollable container
+#     with back_col:
+#         if st.button("←", on_click=update_vals,disabled = disable_back):
+#             st.session_state.current_index -=3
+#     with next_col:
+#         if st.button("→", on_click=update_vals, disabled = disable_next):
+#             st.session_state.current_index +=3
+#     st.write(st.session_state.current_index)
+#     disable_back = (st.session_state.current_index <= 0)
+#     disable_next = (st.session_state.current_index + images_per_page >= len(image_urls))
+#     with display1:
+#         st.image(image_urls[st.session_state.current_index])
+#         st.write('A brief description')
+#     with display2:
+#         if st.session_state.current_index +1<n:
+#             st.image(image_urls[st.session_state.current_index+1])
+#             st.write('A brief description')
+#             end_idx = st.session_state.current_index + 1
+#     with display3:
+#         if st.session_state.current_index +2<n:
+#             st.image(image_urls[st.session_state.current_index+2])
+#             st.write('A brief description')
+#             end_idx = st.session_state.current_index +2
+#
+#     # Display the current index (optional)
+#     st.write(f"Showing collections {st.session_state.current_index+1} to {end_idx+1} of {len(image_urls)}")
 with st.container():
     tab1, tab2, tab3 = st.tabs(["Pax Show-up Profile", "Project Outreach", "Temp"])
-    data = np.random.randn(10, 1)
+    data = pd.DataFrame(abs(np.random.randn(10, 3)),columns = ['Youths','Middle Aged','Seniors'])
 
     tab1.subheader("A tab with a chart")
-    tab1.line_chart(data)
+    tab1.bar_chart(data)
 with tab2:
     budget = st.slider("Select a budget value", min_value=0, max_value = 100, value = 50)
 
-# sorted_items = sort_items(st.session_state.selected_labels)
-
-# Render the Folium map in Streamlit
-
-
+st.markdown("""
+    <style>
+        .custom-header {
+            margin-top: 20px;  # Adjust this value to control the vertical spacing
+        }
+    </style>
+""", unsafe_allow_html=True)
+st.markdown("""
+            <style>
+                   .block-container {
+                        padding-top: 1rem;
+                        padding-bottom: 0rem;
+                        padding-left: 3rem;
+                        padding-right: 3rem;
+                    }
+            </style>
+            """, unsafe_allow_html=True)
