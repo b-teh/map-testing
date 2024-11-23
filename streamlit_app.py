@@ -1,3 +1,4 @@
+import time
 import folium
 from jinja2 import Template
 from branca.element import MacroElement
@@ -103,7 +104,7 @@ def return_style_html():
     style_html = '''<style>
     .popup-container {
         font-family: Arial, sans-serif;
-        height: 300px;  /* Fixed height for scrolling */
+        height: 250px;  /* Fixed height for scrolling */
         overflow-y: auto;  /* Enable vertical scrolling */
         text-align: left;
     }
@@ -136,12 +137,11 @@ def return_style_html():
 
 def create_popup(lat,lng,title, text, image_links=[], video_links=[]):
     popup_content = return_style_html()
-    popup_content += '''<div class="popup-container">
-    <div class="main-popup">'''
+    popup_content += '''<div class="popup-container"><div class="main-popup">'''
     popup_content += f"<h3><strong>{title}</strong></h3>"
     popup_content += f"<p>{text}</p>"
-    for im_link in image_links:
-        popup_content += f"<br><image width='250' height='180' controls><source src='{im_link}' type='image/{video_format}'></image><br>"
+    # for im_link in image_links:
+    #     popup_content += f"<br><image width='250' height='180' controls><source src='{im_link}' type='image/{video_format}'></image><br>"
     # for vid_link in video_links:
     #     popup_content += f"""
     #         <iframe width="320" height="240"
@@ -309,20 +309,7 @@ for _, row in df.iterrows():
         ))
         #now add in details to c
 
-# st.markdown("""
-#         <style>
-#             .rounded-box {
-#                 border-radius: 15px;
-#                 padding: 20px;
-#                 background-color: #00008B;  # Turquoise color
-#                 color: #ffffff;  # White text color for better contrast
-#                 box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.3), -6px -6px 12px rgba(255, 255, 255, 0.5);  # Bevel effect
-#                 max-width: 100%;
-#         </style>
-#     """, unsafe_allow_html=True)
-
-
-
+#box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.3), -6px -6px 12px rgba(255, 255, 255, 0.5);
 #create container with video and description
 with st.container():
     col1, col2 = st.columns([2,3])
@@ -337,35 +324,31 @@ with st.container():
                     border-radius: 0.5rem;
                     padding: 100 px;
                     background-color: #00008B;
-                    box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.3), -6px -6px 12px rgba(255, 255, 255, 0.5);
                 }
                 """,
         ):
             if st.session_state.selected_id is not None:
-                st.markdown(f"""
-                    <h2 style="font-family: 'Roboto', sans-serif;
+                st.markdown(f"""<h2 style="font-family: 'Roboto', sans-serif;
                      color: white;
                      padding: 1.5% 1% 1.5% 3.5%;">
                         {st.session_state.selected_id}
-                    </h2>
-                """, unsafe_allow_html=True)
-                st.markdown(f"""
-                    <p style="font-family: 'Arial', sans-serif;
+                    </h2>""", unsafe_allow_html=True)
+                st.markdown(f"""<p style="font-family: 'Arial', sans-serif;
                      color: white;
                      padding: 1.5% 1% 1.5% 3.5%;">
                         {df.loc[df.Location == st.session_state.selected_id,'Description'].iloc[0]}
-                    </p>
-                """, unsafe_allow_html=True)
+                    </p>""", unsafe_allow_html=True)
                 st.video(data=video_url)
                 a,b,c = st.columns([1,1,1])
                 with b:
                     st.button('textsdfsdfdgfddfgf')
                 st.markdown("")
-    st.markdown("""
-        <style>
-            .stTabs>div { margin-top: 0px; }  /* Remove margin between the sections */
-        </style>
-    """, unsafe_allow_html=True)
+    # st.markdown("""
+    #     <style>
+    #         .stTabs>div { margin-top: 0px; }  /* Remove margin between the sections */
+    #     </style>
+    # """, unsafe_allow_html=True)
+
 #create popups
 with st.expander('Flashmob'):
     st.write('here')
@@ -435,9 +418,9 @@ with st.expander('Larger than Life'):
 #     st.write(f"Showing collections {st.session_state.current_index+1} to {end_idx+1} of {len(image_urls)}")
 with st.container():
     tab1, tab2, tab3 = st.tabs(["Pax Show-up Profile", "Project Outreach", "Temp"])
-    data = pd.DataFrame(abs(np.random.randn(10, 3)),columns = ['Youths','Middle Aged','Seniors'])
+    data = pd.DataFrame(abs(np.random.randn(24, 3)),columns = ['Youths','Middle Aged','Seniors'])
 
-    tab1.subheader("A tab with a chart")
+    tab1.subheader("Hourly foot traffic")
     tab1.bar_chart(data)
 with tab2:
     budget = st.slider("Select a budget value", min_value=0, max_value = 100, value = 50)
@@ -459,3 +442,5 @@ st.markdown("""
                     }
             </style>
             """, unsafe_allow_html=True)
+
+
