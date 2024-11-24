@@ -497,7 +497,7 @@ if "selected_id" not in st.session_state:
     st.session_state.selected_id = None
 
 # Create a div to inject the menu directly into the map
-m.get_root().html.add_child(folium.Element(menu_content))
+# m.get_root().html.add_child(folium.Element(menu_content))
 folium.LayerControl().add_to(m)
 click_for_marker = ClickForOneMarker()
 m.add_child(click_for_marker)
@@ -520,10 +520,10 @@ for _, row in df.iterrows():
         #now add in details to c
 
 #create container with video and description
-with st.container():
+with st.expander("Map"):
     col1, col2 = st.columns([3,2])
     with col1:
-        map_component = st_folium(m, width=800, height=500, feature_group_to_add=fg)#, feature_group_to_add=fg
+        map_component = st_folium(m, width=700, height=500, feature_group_to_add=fg)#, feature_group_to_add=fg
         st.session_state.selected_id = map_component['last_object_clicked_tooltip']
     with col2:
         if st.session_state.selected_id is not None:
