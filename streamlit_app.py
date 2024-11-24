@@ -520,7 +520,7 @@ for _, row in df.iterrows():
         #now add in details to c
 
 #create container with video and description
-with st.expander("Map"):
+with st.container():
     col1, col2 = st.columns([3,2])
     with col1:
         map_component = st_folium(m, width=700, height=500, feature_group_to_add=fg)#, feature_group_to_add=fg
