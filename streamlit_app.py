@@ -7,8 +7,11 @@ import numpy as np
 from streamlit_folium import folium_static, st_folium
 import streamlit as st
 from streamlit_extras.metric_cards import style_metric_cards
+from streamlit_extras.stylable_container import stylable_container
 import streamlit_imagegrid
 import plotly.graph_objects as go
+from streamlit_navigation_bar import st_navbar
+
 
 menu_content = """
 <style>
@@ -457,217 +460,287 @@ def display_kpi_metrics(kpis, kpi_names):
     for i, (col, (kpi_name, kpi_value)) in enumerate(zip(st.columns(m), zip(kpi_names, kpis))):
         col.metric(label=kpi_name, value=kpi_value)
 
-st.set_page_config(page_title= "MadCowMap" , page_icon='https://github.com/b-teh/map-testing/blob/main/MadCow.png?raw=true', layout='wide')
-st.title("MadCowMap")
+
+def login_page():
+    # Title for the app
+    st.title("Login")
+
+    # Create a form for login
+    with st.form(key='login_form'):
+        username = st.text_input("Username")
+        password = st.text_input("Password", type='password')
+        submit_button = st.form_submit_button(label='Login')
+
+    # Hardcoded credentials for demonstration purposes
+    correct_username = "Mowe"
+    correct_password = "Mowe123"
+
+    # Check credentials when the form is submitted
+    if submit_button:
+        if username == correct_username and password == correct_password:
+            st.success("Login successful! Redirecting to the main page...")
+            st.session_state.logged_in = True
+            return True
+        else:
+            st.session_state.logged_in = False
+            st.error("Invalid username or password. Please try again.")
+            return False
+
+def main_page():
+    # onemap_tile_url = "	https://www.onemap.gov.sg/maps/tiles/Night_HD/{z}/{x}/{y}.png"
+    # Initialize session state for selected markers
+
+    st.title("MadCowMap")
+    if "selected_labels" not in st.session_state:
+        st.session_state.selected_labels = []
+
+    # Initialize session state if it's not already initialized
+    if "selection_order" not in st.session_state:
+        st.session_state.selection_order = []
+    df = load_df()
+    # create multiselection
 
 
-# if 'map_center' not in st.session_state:
-#     st.session_state.map_center = [1.352, 103.8198]
-#     st.session_state.zoom_level =  13
 
-# onemap_tile_url = "	https://www.onemap.gov.sg/maps/tiles/Night_HD/{z}/{x}/{y}.png"
-# Initialize session state for selected markers
-if "selected_labels" not in st.session_state:
-    st.session_state.selected_labels = []
+    m = load_map()
+    # init of selected location
+    if "selected_id" not in st.session_state:
+        st.session_state.selected_id = None
 
-# Initialize session state if it's not already initialized
-if "selection_order" not in st.session_state:
-    st.session_state.selection_order = []
-df = load_df()
-#create multiselection
-with st.sidebar:
-    selected_labels = st.multiselect(
-        "Select Locations",
-        options=df["Location"],
-        default=st.session_state.selection_order,  # Default to the recorded order
-    )
-#adjust multiselection location
-# st.markdown("""<style>
-#     .stMultiSelect div[role="listbox"] {
-#         position: absolute;
-#         top: 45px;  /* Adjust this value to move it below the search bar */
-#         z-index: 1000;
-#     }
-#     </style>""", unsafe_allow_html=True)
+    # markdown for tabs design
+    st.markdown("""
+    <style>
+         .stTabs {
+            background-color: #FFFFFF;  /* Light grey background behind the tabs */
+            padding: 10px;
+            border-radius: 10px;  /* Optional: Add rounded corners to the background */
+        }
+    	.stTabs [data-baseweb="tab-list"] {
+    		gap: 0px;
+        }
+        .stTabs [data-baseweb="tab-highlight"] {
+                display:none;
+                background-color:transparent
+            }
+    	.stTabs [data-baseweb="tab"] {
+    	    flex: 0.2;
+    		height: 50px;
+            white-space: pre-wrap;
+    		background-color: #1d3557;
+    		border-radius: 0px 0px 0px 0px;
+    		gap: 0px;
+    		padding-top: 10px;
+    		padding-bottom: 10px;
+    		padding-left: 10px;
+    		padding-right:10px;
+    		color: #FFFFFF; /* Set text color to white */
+            font-weight: bold; /* Make the text bold */
+        }
+
+    	.stTabs [aria-selected="true"] {
+      		background-color: #FFFFFF;
+      		color: #1d3557;
+      		border-radius: 10px 10px 10px 10px;
+    	}
+        .stTabs [aria-selected="false"] {
+            border-radius: 10px 10px 0px 0px;  /* Rounded corners at the top */
+    }
+
+    </style>""", unsafe_allow_html=True)
+    map_tab, proj_specs_tab, analytics_tab = st.tabs(["Map", "Project Specifications", "Analytics"])
+    with map_tab    :
+        col1, col2 = st.columns([3, 2])
+
+        with col1:
+            folium.LayerControl().add_to(m)
+            click_for_marker = ClickForOneMarker()
+            m.add_child(click_for_marker)
+
+            # Refresh for marker selection to highlight
+            fg = folium.FeatureGroup(name="Markers")
+            for _, row in df.iterrows():
+                # Determine marker color based on whether it is selected or not
+                # Add the marker with custom popup and color
+                if row["Location"] in st.session_state.selected_labels:
+                    popup_content = create_popup(row.Latitude, row.Longitude, row.Location, row.Description, [], [])
+                    #     popup_content += return_stats_html([lat,long]) #add statistics
+                    popup = folium.Popup(popup_content, max_width=300)
+                    customicon = folium.features.CustomIcon(f"{row.Project}CircleHighlighted.png", icon_size=(30, 30))
+                    fg.add_child(folium.Marker(location=[row.Latitude, row.Longitude],
+                                               popup=popup,
+                                               icon=customicon,
+                                               tooltip=f'{row.Location}'
+                                               ))
+            with st.container(border = True):
+                map_component = st_folium(m, width=800, height=500, feature_group_to_add=fg)  # , feature_group_to_add=fg
+            st.session_state.selected_id = map_component['last_object_clicked_tooltip']
+        with col2:
+            st.session_state.selected_labels = st.multiselect(
+                "Select Locations",
+                options=df["Location"],
+                default=st.session_state.selection_order,  # Default to the recorded order
+            )
+            if st.session_state.selected_id is not None:
+                with stylable_container(
+                        key="container_with_border",
+                        css_styles="""
+                        {
+                            border: 1px solid rgba(49, 51, 63, 0.2);
+                            border-radius: 0.5rem;
+                            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);  /* Shadow effect */
+                            padding: calc(1em - 1px)
+                        }
+                        """,
+                ):
+                    # Add some content inside the container
+                    st.subheader(st.session_state.selected_id)
+                    st.write(df.loc[df.Location == st.session_state.selected_id, 'Description'].iloc[0])
+                    with st.container():
+                        st.video(data=video_url)
+                    # a, b, c = st.columns([1, 1, 1])
+                    # with b:
+                    #     st.button('Random Button')
+
+    # create popups
+    # h,d =
+    dances = [
+        '<blockquote class="tiktok-embed" cite="https://www.tiktok.com/@yuki_dance_/video/7306857516044979457" data-video-id="7306857516044979457" style="max-width: 605px;min-width: 325px;" > <section> <a target="_blank" title="@yuki_dance_" href="https://www.tiktok.com/@yuki_dance_?refer=embed">@yuki_dance_</a> When you have friends that are willing to do crazy things with you 🤣 <a title="หลวงพี่แจ๊ส4g" target="_blank" href="https://www.tiktok.com/tag/%E0%B8%AB%E0%B8%A5%E0%B8%A7%E0%B8%87%E0%B8%9E%E0%B8%B5%E0%B9%88%E0%B9%81%E0%B8%88%E0%B9%8A%E0%B8%AA4g?refer=embed">#หลวงพี่แจ๊ส4g</a> <a title="หลวงพี่" target="_blank" href="https://www.tiktok.com/tag/%E0%B8%AB%E0%B8%A5%E0%B8%A7%E0%B8%87%E0%B8%9E%E0%B8%B5%E0%B9%88?refer=embed">#หลวงพี่</a> <a title="danceinpublic" target="_blank" href="https://www.tiktok.com/tag/danceinpublic?refer=embed">#danceinpublic</a> <a title="goyoung" target="_blank" href="https://www.tiktok.com/tag/goyoung?refer=embed">#goyoung</a> <a title="dancechallenge" target="_blank" href="https://www.tiktok.com/tag/dancechallenge?refer=embed">#dancechallenge</a> <a target="_blank" title="♬ original sound  - Yuki Dance" href="https://www.tiktok.com/music/original-sound-Yuki-Dance-7306857549872155393?refer=embed">♬ original sound  - Yuki Dance</a> </section> </blockquote> <script async src="https://www.tiktok.com/embed.js"></script>',
+        '<blockquote class="tiktok-embed" cite="https://www.tiktok.com/@urbanverbunk/video/7438991737575492886" data-video-id="7438991737575492886" style="max-width: 605px;min-width: 325px;" > <section> <a target="_blank" title="@urbanverbunk" href="https://www.tiktok.com/@urbanverbunk?refer=embed">@urbanverbunk</a> RIYADH STREETS 🇸🇦🌃 We took our dance to downtown Riyadh to see how the locals would like it. We even got a little help from them!  @عثمان  @Sherine Abdelwahab  <a title="riyadh" target="_blank" href="https://www.tiktok.com/tag/riyadh?refer=embed">#riyadh</a> <a title="olayastreets" target="_blank" href="https://www.tiktok.com/tag/olayastreets?refer=embed">#olayastreets</a> <a title="localriyadh" target="_blank" href="https://www.tiktok.com/tag/localriyadh?refer=embed">#localriyadh</a> <a title="sherine" target="_blank" href="https://www.tiktok.com/tag/sherine?refer=embed">#sherine</a> <a title="sherineremix" target="_blank" href="https://www.tiktok.com/tag/sherineremix?refer=embed">#sherineremix</a> <a title="sabryaalil" target="_blank" href="https://www.tiktok.com/tag/sabryaalil?refer=embed">#sabryaalil</a> <a title="sherinesabryaalil" target="_blank" href="https://www.tiktok.com/tag/sherinesabryaalil?refer=embed">#sherinesabryaalil</a> <a title="urbanverbunk" target="_blank" href="https://www.tiktok.com/tag/urbanverbunk?refer=embed">#urbanverbunk</a> <a title="uv" target="_blank" href="https://www.tiktok.com/tag/uv?refer=embed">#uv</a> <a title="arabsgottalent" target="_blank" href="https://www.tiktok.com/tag/arabsgottalent?refer=embed">#arabsgottalent</a> <a title="riyadh" target="_blank" href="https://www.tiktok.com/tag/riyadh?refer=embed">#riyadh</a> <a title="saudiarabia" target="_blank" href="https://www.tiktok.com/tag/saudiarabia?refer=embed">#saudiarabia</a> <a title="folkdance" target="_blank" href="https://www.tiktok.com/tag/folkdance?refer=embed">#folkdance</a> <a title="streetdance" target="_blank" href="https://www.tiktok.com/tag/streetdance?refer=embed">#streetdance</a> <a title="urbandance" target="_blank" href="https://www.tiktok.com/tag/urbandance?refer=embed">#urbandance</a> <a title="reels" target="_blank" href="https://www.tiktok.com/tag/reels?refer=embed">#reels</a> <a title="dance" target="_blank" href="https://www.tiktok.com/tag/dance?refer=embed">#dance</a> <a target="_blank" title="♬ Sabry Aalil - Sherine" href="https://www.tiktok.com/music/Sabry-Aalil-6969056894707042306?refer=embed">♬ Sabry Aalil - Sherine</a> </section> </blockquote> <script async src="https://www.tiktok.com/embed.js"></script>']
+    with proj_specs_tab:
+        with st.expander('Flashmob'):
+            flashmob_cols = st.columns(3)
+            i=0
+            for dance in dances:
+                with flashmob_cols[i]:
+                    with st.container(border = True):
+                        st.components.v1.html(dance, height=600)
+                        i  = (i+1)%3
+        pre = 'C:/Users/brand/OneDrive/Documents/Portfolio Documents/Marketing/'
+        image_urls = [
+            'https://github.com/b-teh/map-testing/blob/main/IMG-20241112-WA0010.jpg?raw=true',
+            'https://github.com/b-teh/map-testing/blob/main/IMG-20241112-WA0011.jpg?raw=true',
+            'https://github.com/b-teh/map-testing/blob/main/IMG-20241112-WA0013.jpg?raw=true',
+            'https://github.com/b-teh/map-testing/blob/main/IMG-20241112-WA0014.jpg?raw=true',
+            'https://github.com/b-teh/map-testing/blob/main/IMG-20241112-WA0015.jpg?raw=true',
+        ]
+        image_names = ['Image ' + str(i) for i in range(len(image_urls))]
+        n = len(image_urls)
+        n_cols = 3
+        i = 0
+        index = 0
+        with st.expander('Larger than Life'):
+            cols = st.columns(n_cols)
+            for im in image_urls:
+                with cols[i]:
+                    with st.container(border = True):
+                        st.image(im)
+                        # st.text_input('Input something', key = str(index))
+                        st.checkbox("select", key=index)
+                i = (i + 1) % n_cols
+                index += 1
+            comments = st.text_input("Input comments")
+        # Initialize session state variables for the index
+        if "current_index" not in st.session_state:
+            st.session_state.current_index = 0  # Index of the first image in the current set of images
+
+        if "disable_next" not in st.session_state:
+            st.session_state.disable_next = False
+        if "disable_back" not in st.session_state:
+            st.session_state.disable_back = True
+        # Number of images to display per page
+        images_per_page = 3
+
+        def update_vals():
+            st.session_state['disable_back'] = (st.session_state.current_index <= 3)
+            st.session_state['disable_next'] = ((st.session_state.current_index + images_per_page + 3) >= len(image_urls))
+
+        disable_back = (st.session_state.current_index <= 0)
+        disable_next = (st.session_state.current_index + images_per_page >= len(image_urls))
+        # with st.expander('Larger Than Life'):
+        #     back_col, display1, display2, display3, next_col = st.columns([1.5,4,4,4,1.5])
+        #     # Check if we are at the beginning or end of the list
+        #
+        #     # Add images inside the scrollable container
+        #     with back_col:
+        #         if st.button("←", on_click=update_vals,disabled = disable_back):
+        #             st.session_state.current_index -=3
+        #     with next_col:
+        #         if st.button("→", on_click=update_vals, disabled = disable_next):
+        #             st.session_state.current_index +=3
+        #     st.write(st.session_state.current_index)
+        #     disable_back = (st.session_state.current_index <= 0)
+        #     disable_next = (st.session_state.current_index + images_per_page >= len(image_urls))
+        #     with display1:
+        #         st.image(image_urls[st.session_state.current_index])
+        #         st.write('A brief description')
+        #     with display2:
+        #         if st.session_state.current_index +1<n:
+        #             st.image(image_urls[st.session_state.current_index+1])
+        #             st.write('A brief description')
+        #             end_idx = st.session_state.current_index + 1
+        #     with display3:
+        #         if st.session_state.current_index +2<n:
+        #             st.image(image_urls[st.session_state.current_index+2])
+        #             st.write('A brief description')
+        #             end_idx = st.session_state.current_index +2
+        #
+        #     # Display the current index (optional)
+        #     st.write(f"Showing collections {st.session_state.current_index+1} to {end_idx+1} of {len(image_urls)}")
+    with analytics_tab:
+        #insert grid of analytics
+        a1,a2 = st.columns(2)
+        data = pd.DataFrame(abs(np.random.randn(24, 3)), columns=['Youths', 'Middle Aged', 'Seniors'])
+        height = 450
+        with a1:
+            with st.container(border = True,height= height):
+                st.subheader("Hourly Foot Traffic")
+                st.bar_chart(data)
+        with a2:
+            with st.container(border = True,height= height):
+                st.subheader("Project Outreach")
+                budget = st.slider("Select a budget value", min_value=0, max_value=100, value=50)
+                text1 = "Calculating Outreach"
+                text2 = "Sourcing Productions"
+                bar1 = st.progress(0, text=text1)
+                bar2 = st.progress(0, text=text2)
+                prog_rate = np.random.uniform(0.01, 0.03)
+                k = np.random.uniform(1.5, 2)
+                for i in range(101):
+                    bar1.progress(min(int(k * i), 100), text=text1)
+                    bar2.progress(i, text=text2)
+                    time.sleep(prog_rate)
+
+                bar1.empty()
+                bar2.empty()
+
+                st.header("Project Details Dashboard")
+
+                def calc_metrics(budg):
+                    manhours = round(budg * 50.718)
+                    productions = max(int(budg / 25), 1)
+                    pax = round(budg * 11.245)
+                    return [str(pax) + ' Pax', str(productions) + ' Productions', str(manhours) + ' Mins']
+
+                metrics = calc_metrics(budget)
+                metric_names = ['Expected Outreach', 'Exhibits', 'Engagement']
+                c = st.columns(len(metrics))
+                for i in range(len(metrics)):
+                    c[i].metric(label=metric_names[i], value=metrics[i])
+                style_metric_cards(background_color="#FA8072", border_left_color="#F83C28")
 
 
-m = load_map()
-#init of selected location
-if "selected_id" not in st.session_state:
-    st.session_state.selected_id = None
-
-# Create a div to inject the menu directly into the map
-# m.get_root().html.add_child(folium.Element(menu_content))
-folium.LayerControl().add_to(m)
-click_for_marker = ClickForOneMarker()
-m.add_child(click_for_marker)
-
-# Refresh for marker selection to highlight
-fg = folium.FeatureGroup(name="Markers")
-for _, row in df.iterrows():
-    # Determine marker color based on whether it is selected or not
-    # Add the marker with custom popup and color
-    if row["Location"] in selected_labels:
-        popup_content = create_popup(row.Latitude, row.Longitude,row.Location, row.Description, [], [])
-        #     popup_content += return_stats_html([lat,long]) #add statistics
-        popup = folium.Popup(popup_content, max_width=300)
-        customicon = folium.features.CustomIcon(f"{row.Project}CircleHighlighted.png",icon_size=(30, 30))
-        fg.add_child(folium.Marker(location=[row.Latitude, row.Longitude],
-                                   popup=popup,
-                                   icon=customicon,
-                                   tooltip=f'{row.Location}'
-        ))
-        #now add in details to c
-
-#create container with video and description
-with st.expander('Map',expanded = True):
-    col1, col2 = st.columns([3,2])
-    with col1:
-        map_component = st_folium(m, width=700, height=500, feature_group_to_add=fg)#, feature_group_to_add=fg
-        st.session_state.selected_id = map_component['last_object_clicked_tooltip']
-    with col2:
-        if st.session_state.selected_id is not None:
-            st.subheader(st.session_state.selected_id)
-            # st.markdown(f"""<h2 style="font-family: 'Roboto', sans-serif;
-            #      color: black;
-            #      padding: 1.5% 1% 1.5% 3.5%;">
-            #         {st.session_state.selected_id}
-            #     </h2>""", unsafe_allow_html=True)
-            st.write(df.loc[df.Location == st.session_state.selected_id,'Description'].iloc[0])
-            # st.markdown(f"""<p style="font-family: 'Arial', sans-serif;
-            #      color: Black;
-            #      padding: 1.5% 1% 1.5% 3.5%;">
-            #         {df.loc[df.Location == st.session_state.selected_id,'Description'].iloc[0]}
-            #     </p>""", unsafe_allow_html=True)
-            st.video(data=video_url)
-            a,b,c = st.columns([1,1,1])
-            with b:
-                st.button('Random Button')
+st.set_page_config(page_title="MadCowMap",
+                    page_icon='https://github.com/b-teh/map-testing/blob/main/MadCow.png?raw=true', layout='wide')
+if 'logged_in' not in st.session_state:
+    st.session_state.logged_in = False
 
 
-#create popups
-# h,d =
-dances = ['<blockquote class="tiktok-embed" cite="https://www.tiktok.com/@yuki_dance_/video/7306857516044979457" data-video-id="7306857516044979457" style="max-width: 605px;min-width: 325px;" > <section> <a target="_blank" title="@yuki_dance_" href="https://www.tiktok.com/@yuki_dance_?refer=embed">@yuki_dance_</a> When you have friends that are willing to do crazy things with you 🤣 <a title="หลวงพี่แจ๊ส4g" target="_blank" href="https://www.tiktok.com/tag/%E0%B8%AB%E0%B8%A5%E0%B8%A7%E0%B8%87%E0%B8%9E%E0%B8%B5%E0%B9%88%E0%B9%81%E0%B8%88%E0%B9%8A%E0%B8%AA4g?refer=embed">#หลวงพี่แจ๊ส4g</a> <a title="หลวงพี่" target="_blank" href="https://www.tiktok.com/tag/%E0%B8%AB%E0%B8%A5%E0%B8%A7%E0%B8%87%E0%B8%9E%E0%B8%B5%E0%B9%88?refer=embed">#หลวงพี่</a> <a title="danceinpublic" target="_blank" href="https://www.tiktok.com/tag/danceinpublic?refer=embed">#danceinpublic</a> <a title="goyoung" target="_blank" href="https://www.tiktok.com/tag/goyoung?refer=embed">#goyoung</a> <a title="dancechallenge" target="_blank" href="https://www.tiktok.com/tag/dancechallenge?refer=embed">#dancechallenge</a> <a target="_blank" title="♬ original sound  - Yuki Dance" href="https://www.tiktok.com/music/original-sound-Yuki-Dance-7306857549872155393?refer=embed">♬ original sound  - Yuki Dance</a> </section> </blockquote> <script async src="https://www.tiktok.com/embed.js"></script>',
-          '<blockquote class="tiktok-embed" cite="https://www.tiktok.com/@urbanverbunk/video/7438991737575492886" data-video-id="7438991737575492886" style="max-width: 605px;min-width: 325px;" > <section> <a target="_blank" title="@urbanverbunk" href="https://www.tiktok.com/@urbanverbunk?refer=embed">@urbanverbunk</a> RIYADH STREETS 🇸🇦🌃 We took our dance to downtown Riyadh to see how the locals would like it. We even got a little help from them!  @عثمان  @Sherine Abdelwahab  <a title="riyadh" target="_blank" href="https://www.tiktok.com/tag/riyadh?refer=embed">#riyadh</a> <a title="olayastreets" target="_blank" href="https://www.tiktok.com/tag/olayastreets?refer=embed">#olayastreets</a> <a title="localriyadh" target="_blank" href="https://www.tiktok.com/tag/localriyadh?refer=embed">#localriyadh</a> <a title="sherine" target="_blank" href="https://www.tiktok.com/tag/sherine?refer=embed">#sherine</a> <a title="sherineremix" target="_blank" href="https://www.tiktok.com/tag/sherineremix?refer=embed">#sherineremix</a> <a title="sabryaalil" target="_blank" href="https://www.tiktok.com/tag/sabryaalil?refer=embed">#sabryaalil</a> <a title="sherinesabryaalil" target="_blank" href="https://www.tiktok.com/tag/sherinesabryaalil?refer=embed">#sherinesabryaalil</a> <a title="urbanverbunk" target="_blank" href="https://www.tiktok.com/tag/urbanverbunk?refer=embed">#urbanverbunk</a> <a title="uv" target="_blank" href="https://www.tiktok.com/tag/uv?refer=embed">#uv</a> <a title="arabsgottalent" target="_blank" href="https://www.tiktok.com/tag/arabsgottalent?refer=embed">#arabsgottalent</a> <a title="riyadh" target="_blank" href="https://www.tiktok.com/tag/riyadh?refer=embed">#riyadh</a> <a title="saudiarabia" target="_blank" href="https://www.tiktok.com/tag/saudiarabia?refer=embed">#saudiarabia</a> <a title="folkdance" target="_blank" href="https://www.tiktok.com/tag/folkdance?refer=embed">#folkdance</a> <a title="streetdance" target="_blank" href="https://www.tiktok.com/tag/streetdance?refer=embed">#streetdance</a> <a title="urbandance" target="_blank" href="https://www.tiktok.com/tag/urbandance?refer=embed">#urbandance</a> <a title="reels" target="_blank" href="https://www.tiktok.com/tag/reels?refer=embed">#reels</a> <a title="dance" target="_blank" href="https://www.tiktok.com/tag/dance?refer=embed">#dance</a> <a target="_blank" title="♬ Sabry Aalil - Sherine" href="https://www.tiktok.com/music/Sabry-Aalil-6969056894707042306?refer=embed">♬ Sabry Aalil - Sherine</a> </section> </blockquote> <script async src="https://www.tiktok.com/embed.js"></script>']
-with st.expander('Flashmob'):
-    for dance in dances:
-        st.components.v1.html(dance, height=600)
-pre = 'C:/Users/brand/OneDrive/Documents/Portfolio Documents/Marketing/'
-image_urls = [
-    'https://github.com/b-teh/map-testing/blob/main/IMG-20241112-WA0010.jpg?raw=true',
-    'https://github.com/b-teh/map-testing/blob/main/IMG-20241112-WA0011.jpg?raw=true',
-    'https://github.com/b-teh/map-testing/blob/main/IMG-20241112-WA0013.jpg?raw=true',
-    'https://github.com/b-teh/map-testing/blob/main/IMG-20241112-WA0014.jpg?raw=true',
-    'https://github.com/b-teh/map-testing/blob/main/IMG-20241112-WA0015.jpg?raw=true',
-]
-n = len(image_urls)
-n_cols = 3
-i = 0
-with st.expander('Larger than Life'):
-    cols =st.columns(n_cols)
-    for im in image_urls:
-        with cols[i]:
-            st.image(im)
-        i = (i+1)%n_cols
+if st.session_state.logged_in:
+    main_page()
+else:
+    login_page()
+    if st.session_state.logged_in:
+        main_page()
 
-# # Initialize session state variables for the index
-# if "current_index" not in st.session_state:
-#     st.session_state.current_index = 0  # Index of the first image in the current set of images
-#
-# if "disable_next" not in st.session_state:
-#     st.session_state.disable_next = False
-# if "disable_back" not in st.session_state:
-#     st.session_state.disable_back = True
-# # Number of images to display per page
-# images_per_page = 3
-#
-# def update_vals():
-#     st.session_state['disable_back'] = (st.session_state.current_index<= 3)
-#     st.session_state['disable_next'] = ((st.session_state.current_index + images_per_page +3)>= len(image_urls))
-# disable_back = (st.session_state.current_index <= 0)
-# disable_next = (st.session_state.current_index + images_per_page >= len(image_urls))
-# with st.expander('Larger Than Life'):
-#     back_col, display1, display2, display3, next_col = st.columns([1.5,4,4,4,1.5])
-#     # Check if we are at the beginning or end of the list
-#
-#     # Add images inside the scrollable container
-#     with back_col:
-#         if st.button("←", on_click=update_vals,disabled = disable_back):
-#             st.session_state.current_index -=3
-#     with next_col:
-#         if st.button("→", on_click=update_vals, disabled = disable_next):
-#             st.session_state.current_index +=3
-#     st.write(st.session_state.current_index)
-#     disable_back = (st.session_state.current_index <= 0)
-#     disable_next = (st.session_state.current_index + images_per_page >= len(image_urls))
-#     with display1:
-#         st.image(image_urls[st.session_state.current_index])
-#         st.write('A brief description')
-#     with display2:
-#         if st.session_state.current_index +1<n:
-#             st.image(image_urls[st.session_state.current_index+1])
-#             st.write('A brief description')
-#             end_idx = st.session_state.current_index + 1
-#     with display3:
-#         if st.session_state.current_index +2<n:
-#             st.image(image_urls[st.session_state.current_index+2])
-#             st.write('A brief description')
-#             end_idx = st.session_state.current_index +2
-#
-#     # Display the current index (optional)
-#     st.write(f"Showing collections {st.session_state.current_index+1} to {end_idx+1} of {len(image_urls)}")
-with st.container():
-    tab1, tab2, tab3 = st.tabs(["Pax Show-up Profile", "Project Outreach", "Temp"])
-    data = pd.DataFrame(abs(np.random.randn(24, 3)),columns = ['Youths','Middle Aged','Seniors'])
-
-    tab1.subheader("Hourly foot traffic")
-    tab1.bar_chart(data)
-with tab2:
-    budget = st.slider("Select a budget value", min_value=0, max_value = 100, value = 50)
-    text1 = "Calculating Outreach"
-    text2 = "Sourcing Productions"
-    bar1 = st.progress(0, text=text1)
-    bar2 = st.progress(0, text=text2)
-    prog_rate = np.random.uniform(0.01,0.03)
-    k = np.random.uniform(1.5,2)
-    for i in range(101):
-        bar1.progress(min(int(k*i),100), text =text1 )
-        bar2.progress(i, text=text2)
-        time.sleep(prog_rate)
-
-    bar1.empty()
-    bar2.empty()
-
-    st.header("Project Details Dashboard")
-    def calc_metrics(budg):
-        manhours = round(budg*50.718)
-        productions = max(int(budg/25),1)
-        pax = round(budg*11.245)
-        return [str(pax)+' Pax',str(productions)+' Productions' ,str(manhours)+' Mins']
-    metrics = calc_metrics(budget)
-    metric_names = ['Expected Outreach', 'Exhibits','Engagement']
-    c = st.columns(len(metrics))
-    for i in range(len(metrics)):
-        c[i].metric(label = metric_names[i], value = metrics[i])
-    style_metric_cards(background_color = "#FA8072", border_left_color="#F83C28")
-
-
-# st.markdown("""
-#     <style>
-#         .custom-header {
-#             margin-top: 20px;  # Adjust this value to control the vertical spacing
-#         }
-#     </style>
-# """, unsafe_allow_html=True)
-# st.markdown("""
-#             <style>
-#                    .block-container {
-#                         padding-top: 1rem;
-#                         padding-bottom: 0rem;
-#                         padding-left: 3rem;
-#                         padding-right: 3rem;
-#                     }
-#             </style>
-#             """, unsafe_allow_html=True)
 
 
