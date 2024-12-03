@@ -8,9 +8,8 @@ from streamlit_folium import folium_static, st_folium
 import streamlit as st
 from streamlit_extras.metric_cards import style_metric_cards
 from streamlit_extras.stylable_container import stylable_container
-import streamlit_imagegrid
 import plotly.graph_objects as go
-from streamlit_navigation_bar import st_navbar
+
 
 
 menu_content = """
