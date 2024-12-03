@@ -1,8 +1,6 @@
 folium==0.18.0
 geopandas==1.0.1
 ipyvizzu==0.17.0
-shapely==2.0.6
-srsly==2.4.3
 st-annotated-text==4.0.1
 st-theme==1.2.3
 stack-data==0.3.0
