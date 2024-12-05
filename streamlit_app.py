@@ -470,10 +470,6 @@ def login_page():
         password = st.text_input("Password", type='password')
         submit_button = st.form_submit_button(label='Login')
 
-    # Hardcoded credentials for demonstration purposes
-    correct_username = "Mowe"
-    correct_password = "Mowe123"
-
     # Check credentials when the form is submitted
     if submit_button:
         if username == correct_username and password == correct_password:
