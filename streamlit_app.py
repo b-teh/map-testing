@@ -459,15 +459,11 @@ def display_kpi_metrics(kpis, kpi_names):
     for i, (col, (kpi_name, kpi_value)) in enumerate(zip(st.columns(m), zip(kpi_names, kpis))):
         col.metric(label=kpi_name, value=kpi_value)
     # Load the TOML configuration file
-def load_secrets():
-    secrets = toml.load('secrets.toml')
-    return secrets
 
 # Validate login function
 def validate_login(username, password):
-    secrets= load_secrets()
-    correct_username = secrets['login']['username']
-    correct_password = secrets['login']['password']
+    correct_username = st.secrets['login']['username']
+    correct_password = st.secrets['login']['password']
 
     # Check if the provided username and password match the ones in the TOML file
     return username == correct_username and password == correct_password
