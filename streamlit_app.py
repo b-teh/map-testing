@@ -9,7 +9,7 @@ import streamlit as st
 from streamlit_extras.metric_cards import style_metric_cards
 from streamlit_extras.stylable_container import stylable_container
 import plotly.graph_objects as go
-
+import toml
 
 
 menu_content = """
@@ -458,7 +458,19 @@ def display_kpi_metrics(kpis, kpi_names):
     m = len(kpis)
     for i, (col, (kpi_name, kpi_value)) in enumerate(zip(st.columns(m), zip(kpi_names, kpis))):
         col.metric(label=kpi_name, value=kpi_value)
+    # Load the TOML configuration file
+def load_config():
+    config = toml.load('config.toml')
+    return config
 
+# Validate login function
+def validate_login(username, password):
+    config = load_config()
+    correct_username = config['login']['username']
+    correct_password = config['login']['password']
+
+    # Check if the provided username and password match the ones in the TOML file
+    return username == correct_username and password == correct_password
 
 def login_page():
     # Title for the app
@@ -470,9 +482,12 @@ def login_page():
         password = st.text_input("Password", type='password')
         submit_button = st.form_submit_button(label='Login')
 
+
+
+
     # Check credentials when the form is submitted
     if submit_button:
-        if username == correct_username and password == correct_password:
+        if validate_login(username, password):
             st.success("Login successful! Redirecting to the main page...")
             st.session_state.logged_in = True
             return True
