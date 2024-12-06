@@ -2,7 +2,6 @@ import time
 import folium
 from jinja2 import Template
 from branca.element import MacroElement
-import pandas as pd
 import numpy as np
 from streamlit_folium import folium_static, st_folium
 import streamlit as st
@@ -10,8 +9,9 @@ from streamlit_extras.metric_cards import style_metric_cards
 from streamlit_extras.stylable_container import stylable_container
 import plotly.graph_objects as go
 import toml
-
-
+import requests
+import pandas as pd
+from io import StringIO
 menu_content = """
 <style>
     #menu {
@@ -301,7 +301,19 @@ def animate():
 @st.cache_data
 def load_df():
     #change code to load data accordingly
-    df = pd.read_csv('locations.csv')
+    sheet_id = "17SfAJF4haKJn7Q3SDyvOZ8qYrYXBW4CzniWuvBvR_c0"
+    sheet_name = "Locations"
+    # URL of the published Google Sheet (CSV format)
+    sheet_url = "https://docs.google.com/spreadsheets/d/17SfAJF4haKJn7Q3SDyvOZ8qYrYXBW4CzniWuvBvR_c0/export?format=csv&gid=1758088247"
+
+    # Step 1: Get the data from the URL
+    response = requests.get(sheet_url)
+
+    # Check if the request was successful
+    if response.status_code == 200:
+        # Step 2: Read the CSV content into a pandas DataFrame
+        csv_data = StringIO(response.text)
+        df = pd.read_csv(csv_data)
     return df
 
 def init_map(center=(1.352, 103.8198), zoom_start=13, map_type="OpenStreetMap"):
@@ -747,6 +759,3 @@ else:
     login_page()
     if st.session_state.logged_in:
         main_page()
-
-
-
