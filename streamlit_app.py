@@ -1,5 +1,4 @@
 import time
-import json
 import folium
 from jinja2 import Template
 from branca.element import MacroElement
@@ -523,10 +522,8 @@ def main_page():
         st.session_state.selection_order = []
     df = load_df()
     # create multiselection
-
-
-
     m = load_map()
+
     # init of selected location
     if "selected_id" not in st.session_state:
         st.session_state.selected_id = None
@@ -571,10 +568,11 @@ def main_page():
     }
 
     </style>""", unsafe_allow_html=True)
-    proj_specs_tab,map_tab,  analytics_tab = st.tabs(["Project Specifications","Map", "Analytics"])
+    proj_specs_tab, map_tab, analytics_tab = st.tabs(["Project Specifications","Map", "Analytics"])
+    # with proj_specs_tab:
+
     with map_tab:
         col1, col2 = st.columns([3, 2])
-
         with col1:
             folium.LayerControl().add_to(m)
             click_for_marker = ClickForOneMarker()
@@ -595,8 +593,8 @@ def main_page():
                                                icon=customicon,
                                                tooltip=f'{row.Location}'
                                                ))
-            with st.container(border = True):
-                map_component = st_folium(m, width=800, height=500, feature_group_to_add=fg)  # , feature_group_to_add=fg
+            # with st.container(border = True):
+            map_component = st_folium(m, width=800, height=500, feature_group_to_add=fg)  # , feature_group_to_add=fg
             st.session_state.selected_id = map_component['last_object_clicked_tooltip']
         with col2:
             st.session_state.selected_labels = st.multiselect(
@@ -621,12 +619,7 @@ def main_page():
                     st.write(df.loc[df.Location == st.session_state.selected_id, 'Description'].iloc[0])
                     with st.container():
                         st.video(data=video_url)
-                    # a, b, c = st.columns([1, 1, 1])
-                    # with b:
-                    #     st.button('Random Button')
 
-    # create popups
-    # h,d =
     dances = [
         '<blockquote class="tiktok-embed" cite="https://www.tiktok.com/@yuki_dance_/video/7306857516044979457" data-video-id="7306857516044979457" style="max-width: 605px;min-width: 325px;" > <section> <a target="_blank" title="@yuki_dance_" href="https://www.tiktok.com/@yuki_dance_?refer=embed">@yuki_dance_</a> When you have friends that are willing to do crazy things with you 🤣 <a title="หลวงพี่แจ๊ส4g" target="_blank" href="https://www.tiktok.com/tag/%E0%B8%AB%E0%B8%A5%E0%B8%A7%E0%B8%87%E0%B8%9E%E0%B8%B5%E0%B9%88%E0%B9%81%E0%B8%88%E0%B9%8A%E0%B8%AA4g?refer=embed">#หลวงพี่แจ๊ส4g</a> <a title="หลวงพี่" target="_blank" href="https://www.tiktok.com/tag/%E0%B8%AB%E0%B8%A5%E0%B8%A7%E0%B8%87%E0%B8%9E%E0%B8%B5%E0%B9%88?refer=embed">#หลวงพี่</a> <a title="danceinpublic" target="_blank" href="https://www.tiktok.com/tag/danceinpublic?refer=embed">#danceinpublic</a> <a title="goyoung" target="_blank" href="https://www.tiktok.com/tag/goyoung?refer=embed">#goyoung</a> <a title="dancechallenge" target="_blank" href="https://www.tiktok.com/tag/dancechallenge?refer=embed">#dancechallenge</a> <a target="_blank" title="♬ original sound  - Yuki Dance" href="https://www.tiktok.com/music/original-sound-Yuki-Dance-7306857549872155393?refer=embed">♬ original sound  - Yuki Dance</a> </section> </blockquote> <script async src="https://www.tiktok.com/embed.js"></script>',
         '<blockquote class="tiktok-embed" cite="https://www.tiktok.com/@urbanverbunk/video/7438991737575492886" data-video-id="7438991737575492886" style="max-width: 605px;min-width: 325px;" > <section> <a target="_blank" title="@urbanverbunk" href="https://www.tiktok.com/@urbanverbunk?refer=embed">@urbanverbunk</a> RIYADH STREETS 🇸🇦🌃 We took our dance to downtown Riyadh to see how the locals would like it. We even got a little help from them!  @عثمان  @Sherine Abdelwahab  <a title="riyadh" target="_blank" href="https://www.tiktok.com/tag/riyadh?refer=embed">#riyadh</a> <a title="olayastreets" target="_blank" href="https://www.tiktok.com/tag/olayastreets?refer=embed">#olayastreets</a> <a title="localriyadh" target="_blank" href="https://www.tiktok.com/tag/localriyadh?refer=embed">#localriyadh</a> <a title="sherine" target="_blank" href="https://www.tiktok.com/tag/sherine?refer=embed">#sherine</a> <a title="sherineremix" target="_blank" href="https://www.tiktok.com/tag/sherineremix?refer=embed">#sherineremix</a> <a title="sabryaalil" target="_blank" href="https://www.tiktok.com/tag/sabryaalil?refer=embed">#sabryaalil</a> <a title="sherinesabryaalil" target="_blank" href="https://www.tiktok.com/tag/sherinesabryaalil?refer=embed">#sherinesabryaalil</a> <a title="urbanverbunk" target="_blank" href="https://www.tiktok.com/tag/urbanverbunk?refer=embed">#urbanverbunk</a> <a title="uv" target="_blank" href="https://www.tiktok.com/tag/uv?refer=embed">#uv</a> <a title="arabsgottalent" target="_blank" href="https://www.tiktok.com/tag/arabsgottalent?refer=embed">#arabsgottalent</a> <a title="riyadh" target="_blank" href="https://www.tiktok.com/tag/riyadh?refer=embed">#riyadh</a> <a title="saudiarabia" target="_blank" href="https://www.tiktok.com/tag/saudiarabia?refer=embed">#saudiarabia</a> <a title="folkdance" target="_blank" href="https://www.tiktok.com/tag/folkdance?refer=embed">#folkdance</a> <a title="streetdance" target="_blank" href="https://www.tiktok.com/tag/streetdance?refer=embed">#streetdance</a> <a title="urbandance" target="_blank" href="https://www.tiktok.com/tag/urbandance?refer=embed">#urbandance</a> <a title="reels" target="_blank" href="https://www.tiktok.com/tag/reels?refer=embed">#reels</a> <a title="dance" target="_blank" href="https://www.tiktok.com/tag/dance?refer=embed">#dance</a> <a target="_blank" title="♬ Sabry Aalil - Sherine" href="https://www.tiktok.com/music/Sabry-Aalil-6969056894707042306?refer=embed">♬ Sabry Aalil - Sherine</a> </section> </blockquote> <script async src="https://www.tiktok.com/embed.js"></script>']
