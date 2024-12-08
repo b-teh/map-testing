@@ -653,6 +653,13 @@ def main_page():
                 options=df["Location"],
                 default=st.session_state.selection_order,  # Default to the recorded order
             )
+            save_selected = st.button('Save Selection')
+            if save_selected:
+                with open("selected_options.txt", "w") as file:
+                    file.write("\n".join(st.session_state.selected_labels))  # Save each option on a new line
+                success_message = st.success("Selected options saved successfully!")
+                time.sleep(2)  # Wait for 3 seconds
+                success_message.empty()
             if st.session_state.selected_id is not None:
                 with stylable_container(
                         key="container_with_border",
@@ -689,7 +696,9 @@ def main_page():
             'https://github.com/b-teh/map-testing/blob/main/IMG-20241112-WA0013.jpg?raw=true',
             'https://github.com/b-teh/map-testing/blob/main/IMG-20241112-WA0014.jpg?raw=true',
             'https://github.com/b-teh/map-testing/blob/main/IMG-20241112-WA0015.jpg?raw=true',
+            'https://drive.google.com/uc?export=view&id=1pc0wVWHL_IcwFThXpfLvFJboANfsuWOv'
         ]
+
         image_names = ['Image ' + str(i) for i in range(len(image_urls))]
         n = len(image_urls)
         n_cols = 3
@@ -828,6 +837,10 @@ else:
     login_page()
     if st.session_state.logged_in:
         main_page()
+
+
+
+
 
 
 
