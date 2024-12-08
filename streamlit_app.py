@@ -572,7 +572,7 @@ def main_page():
 
     </style>""", unsafe_allow_html=True)
     proj_specs_tab,map_tab,  analytics_tab = st.tabs(["Project Specifications","Map", "Analytics"])
-    with map_tab    :
+    with map_tab:
         col1, col2 = st.columns([3, 2])
 
         with col1:
