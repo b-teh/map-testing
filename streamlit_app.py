@@ -566,65 +566,7 @@ def main_page():
 
     </style>""", unsafe_allow_html=True)
     map_tab, proj_specs_tab, analytics_tab = st.tabs(["Map", "Project Specifications", "Analytics"])
-    with map_tab    :
-        col1, col2 = st.columns([3, 2])
-
-        with col1:
-            folium.LayerControl().add_to(m)
-            click_for_marker = ClickForOneMarker()
-            m.add_child(click_for_marker)
-
-            # Refresh for marker selection to highlight
-            fg = folium.FeatureGroup(name="Markers")
-            for _, row in df.iterrows():
-                # Determine marker color based on whether it is selected or not
-                # Add the marker with custom popup and color
-                if row["Location"] in st.session_state.selected_labels:
-                    popup_content = create_popup(row.Latitude, row.Longitude, row.Location, row.Description, [], [])
-                    #     popup_content += return_stats_html([lat,long]) #add statistics
-                    popup = folium.Popup(popup_content, max_width=300)
-                    customicon = folium.features.CustomIcon(f"{row.Project}CircleHighlighted.png", icon_size=(30, 30))
-                    fg.add_child(folium.Marker(location=[row.Latitude, row.Longitude],
-                                               popup=popup,
-                                               icon=customicon,
-                                               tooltip=f'{row.Location}'
-                                               ))
-            with st.container(border = True):
-                map_component = st_folium(m, width=800, height=500, feature_group_to_add=fg)  # , feature_group_to_add=fg
-            st.session_state.selected_id = map_component['last_object_clicked_tooltip']
-        with col2:
-            st.session_state.selected_labels = st.multiselect(
-                "Select Locations",
-                options=df["Location"],
-                default=st.session_state.selection_order,  # Default to the recorded order
-            )
-            if st.session_state.selected_id is not None:
-                with stylable_container(
-                        key="container_with_border",
-                        css_styles="""
-                        {
-                            border: 1px solid rgba(49, 51, 63, 0.2);
-                            border-radius: 0.5rem;
-                            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);  /* Shadow effect */
-                            padding: calc(1em - 1px)
-                        }
-                        """,
-                ):
-                    # Add some content inside the container
-                    st.subheader(st.session_state.selected_id)
-                    st.write(df.loc[df.Location == st.session_state.selected_id, 'Description'].iloc[0])
-                    with st.container():
-                        st.video(data=video_url)
-                    # a, b, c = st.columns([1, 1, 1])
-                    # with b:
-                    #     st.button('Random Button')
-
-    # create popups
-    # h,d =
-    dances = [
-        '<blockquote class="tiktok-embed" cite="https://www.tiktok.com/@yuki_dance_/video/7306857516044979457" data-video-id="7306857516044979457" style="max-width: 605px;min-width: 325px;" > <section> <a target="_blank" title="@yuki_dance_" href="https://www.tiktok.com/@yuki_dance_?refer=embed">@yuki_dance_</a> When you have friends that are willing to do crazy things with you 🤣 <a title="หลวงพี่แจ๊ส4g" target="_blank" href="https://www.tiktok.com/tag/%E0%B8%AB%E0%B8%A5%E0%B8%A7%E0%B8%87%E0%B8%9E%E0%B8%B5%E0%B9%88%E0%B9%81%E0%B8%88%E0%B9%8A%E0%B8%AA4g?refer=embed">#หลวงพี่แจ๊ส4g</a> <a title="หลวงพี่" target="_blank" href="https://www.tiktok.com/tag/%E0%B8%AB%E0%B8%A5%E0%B8%A7%E0%B8%87%E0%B8%9E%E0%B8%B5%E0%B9%88?refer=embed">#หลวงพี่</a> <a title="danceinpublic" target="_blank" href="https://www.tiktok.com/tag/danceinpublic?refer=embed">#danceinpublic</a> <a title="goyoung" target="_blank" href="https://www.tiktok.com/tag/goyoung?refer=embed">#goyoung</a> <a title="dancechallenge" target="_blank" href="https://www.tiktok.com/tag/dancechallenge?refer=embed">#dancechallenge</a> <a target="_blank" title="♬ original sound  - Yuki Dance" href="https://www.tiktok.com/music/original-sound-Yuki-Dance-7306857549872155393?refer=embed">♬ original sound  - Yuki Dance</a> </section> </blockquote> <script async src="https://www.tiktok.com/embed.js"></script>',
-        '<blockquote class="tiktok-embed" cite="https://www.tiktok.com/@urbanverbunk/video/7438991737575492886" data-video-id="7438991737575492886" style="max-width: 605px;min-width: 325px;" > <section> <a target="_blank" title="@urbanverbunk" href="https://www.tiktok.com/@urbanverbunk?refer=embed">@urbanverbunk</a> RIYADH STREETS 🇸🇦🌃 We took our dance to downtown Riyadh to see how the locals would like it. We even got a little help from them!  @عثمان  @Sherine Abdelwahab  <a title="riyadh" target="_blank" href="https://www.tiktok.com/tag/riyadh?refer=embed">#riyadh</a> <a title="olayastreets" target="_blank" href="https://www.tiktok.com/tag/olayastreets?refer=embed">#olayastreets</a> <a title="localriyadh" target="_blank" href="https://www.tiktok.com/tag/localriyadh?refer=embed">#localriyadh</a> <a title="sherine" target="_blank" href="https://www.tiktok.com/tag/sherine?refer=embed">#sherine</a> <a title="sherineremix" target="_blank" href="https://www.tiktok.com/tag/sherineremix?refer=embed">#sherineremix</a> <a title="sabryaalil" target="_blank" href="https://www.tiktok.com/tag/sabryaalil?refer=embed">#sabryaalil</a> <a title="sherinesabryaalil" target="_blank" href="https://www.tiktok.com/tag/sherinesabryaalil?refer=embed">#sherinesabryaalil</a> <a title="urbanverbunk" target="_blank" href="https://www.tiktok.com/tag/urbanverbunk?refer=embed">#urbanverbunk</a> <a title="uv" target="_blank" href="https://www.tiktok.com/tag/uv?refer=embed">#uv</a> <a title="arabsgottalent" target="_blank" href="https://www.tiktok.com/tag/arabsgottalent?refer=embed">#arabsgottalent</a> <a title="riyadh" target="_blank" href="https://www.tiktok.com/tag/riyadh?refer=embed">#riyadh</a> <a title="saudiarabia" target="_blank" href="https://www.tiktok.com/tag/saudiarabia?refer=embed">#saudiarabia</a> <a title="folkdance" target="_blank" href="https://www.tiktok.com/tag/folkdance?refer=embed">#folkdance</a> <a title="streetdance" target="_blank" href="https://www.tiktok.com/tag/streetdance?refer=embed">#streetdance</a> <a title="urbandance" target="_blank" href="https://www.tiktok.com/tag/urbandance?refer=embed">#urbandance</a> <a title="reels" target="_blank" href="https://www.tiktok.com/tag/reels?refer=embed">#reels</a> <a title="dance" target="_blank" href="https://www.tiktok.com/tag/dance?refer=embed">#dance</a> <a target="_blank" title="♬ Sabry Aalil - Sherine" href="https://www.tiktok.com/music/Sabry-Aalil-6969056894707042306?refer=embed">♬ Sabry Aalil - Sherine</a> </section> </blockquote> <script async src="https://www.tiktok.com/embed.js"></script>']
-    with proj_specs_tab:
+     with proj_specs_tab:
         with st.expander('Flashmob'):
             flashmob_cols = st.columns(3)
             i=0
@@ -704,6 +646,65 @@ def main_page():
         #
         #     # Display the current index (optional)
         #     st.write(f"Showing collections {st.session_state.current_index+1} to {end_idx+1} of {len(image_urls)}")
+    with map_tab    :
+        col1, col2 = st.columns([3, 2])
+
+        with col1:
+            folium.LayerControl().add_to(m)
+            click_for_marker = ClickForOneMarker()
+            m.add_child(click_for_marker)
+
+            # Refresh for marker selection to highlight
+            fg = folium.FeatureGroup(name="Markers")
+            for _, row in df.iterrows():
+                # Determine marker color based on whether it is selected or not
+                # Add the marker with custom popup and color
+                if row["Location"] in st.session_state.selected_labels:
+                    popup_content = create_popup(row.Latitude, row.Longitude, row.Location, row.Description, [], [])
+                    #     popup_content += return_stats_html([lat,long]) #add statistics
+                    popup = folium.Popup(popup_content, max_width=300)
+                    customicon = folium.features.CustomIcon(f"{row.Project}CircleHighlighted.png", icon_size=(30, 30))
+                    fg.add_child(folium.Marker(location=[row.Latitude, row.Longitude],
+                                               popup=popup,
+                                               icon=customicon,
+                                               tooltip=f'{row.Location}'
+                                               ))
+            with st.container(border = True):
+                map_component = st_folium(m, width=800, height=500, feature_group_to_add=fg)  # , feature_group_to_add=fg
+            st.session_state.selected_id = map_component['last_object_clicked_tooltip']
+        with col2:
+            st.session_state.selected_labels = st.multiselect(
+                "Select Locations",
+                options=df["Location"],
+                default=st.session_state.selection_order,  # Default to the recorded order
+            )
+            if st.session_state.selected_id is not None:
+                with stylable_container(
+                        key="container_with_border",
+                        css_styles="""
+                        {
+                            border: 1px solid rgba(49, 51, 63, 0.2);
+                            border-radius: 0.5rem;
+                            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);  /* Shadow effect */
+                            padding: calc(1em - 1px)
+                        }
+                        """,
+                ):
+                    # Add some content inside the container
+                    st.subheader(st.session_state.selected_id)
+                    st.write(df.loc[df.Location == st.session_state.selected_id, 'Description'].iloc[0])
+                    with st.container():
+                        st.video(data=video_url)
+                    # a, b, c = st.columns([1, 1, 1])
+                    # with b:
+                    #     st.button('Random Button')
+
+    # create popups
+    # h,d =
+    dances = [
+        '<blockquote class="tiktok-embed" cite="https://www.tiktok.com/@yuki_dance_/video/7306857516044979457" data-video-id="7306857516044979457" style="max-width: 605px;min-width: 325px;" > <section> <a target="_blank" title="@yuki_dance_" href="https://www.tiktok.com/@yuki_dance_?refer=embed">@yuki_dance_</a> When you have friends that are willing to do crazy things with you 🤣 <a title="หลวงพี่แจ๊ส4g" target="_blank" href="https://www.tiktok.com/tag/%E0%B8%AB%E0%B8%A5%E0%B8%A7%E0%B8%87%E0%B8%9E%E0%B8%B5%E0%B9%88%E0%B9%81%E0%B8%88%E0%B9%8A%E0%B8%AA4g?refer=embed">#หลวงพี่แจ๊ส4g</a> <a title="หลวงพี่" target="_blank" href="https://www.tiktok.com/tag/%E0%B8%AB%E0%B8%A5%E0%B8%A7%E0%B8%87%E0%B8%9E%E0%B8%B5%E0%B9%88?refer=embed">#หลวงพี่</a> <a title="danceinpublic" target="_blank" href="https://www.tiktok.com/tag/danceinpublic?refer=embed">#danceinpublic</a> <a title="goyoung" target="_blank" href="https://www.tiktok.com/tag/goyoung?refer=embed">#goyoung</a> <a title="dancechallenge" target="_blank" href="https://www.tiktok.com/tag/dancechallenge?refer=embed">#dancechallenge</a> <a target="_blank" title="♬ original sound  - Yuki Dance" href="https://www.tiktok.com/music/original-sound-Yuki-Dance-7306857549872155393?refer=embed">♬ original sound  - Yuki Dance</a> </section> </blockquote> <script async src="https://www.tiktok.com/embed.js"></script>',
+        '<blockquote class="tiktok-embed" cite="https://www.tiktok.com/@urbanverbunk/video/7438991737575492886" data-video-id="7438991737575492886" style="max-width: 605px;min-width: 325px;" > <section> <a target="_blank" title="@urbanverbunk" href="https://www.tiktok.com/@urbanverbunk?refer=embed">@urbanverbunk</a> RIYADH STREETS 🇸🇦🌃 We took our dance to downtown Riyadh to see how the locals would like it. We even got a little help from them!  @عثمان  @Sherine Abdelwahab  <a title="riyadh" target="_blank" href="https://www.tiktok.com/tag/riyadh?refer=embed">#riyadh</a> <a title="olayastreets" target="_blank" href="https://www.tiktok.com/tag/olayastreets?refer=embed">#olayastreets</a> <a title="localriyadh" target="_blank" href="https://www.tiktok.com/tag/localriyadh?refer=embed">#localriyadh</a> <a title="sherine" target="_blank" href="https://www.tiktok.com/tag/sherine?refer=embed">#sherine</a> <a title="sherineremix" target="_blank" href="https://www.tiktok.com/tag/sherineremix?refer=embed">#sherineremix</a> <a title="sabryaalil" target="_blank" href="https://www.tiktok.com/tag/sabryaalil?refer=embed">#sabryaalil</a> <a title="sherinesabryaalil" target="_blank" href="https://www.tiktok.com/tag/sherinesabryaalil?refer=embed">#sherinesabryaalil</a> <a title="urbanverbunk" target="_blank" href="https://www.tiktok.com/tag/urbanverbunk?refer=embed">#urbanverbunk</a> <a title="uv" target="_blank" href="https://www.tiktok.com/tag/uv?refer=embed">#uv</a> <a title="arabsgottalent" target="_blank" href="https://www.tiktok.com/tag/arabsgottalent?refer=embed">#arabsgottalent</a> <a title="riyadh" target="_blank" href="https://www.tiktok.com/tag/riyadh?refer=embed">#riyadh</a> <a title="saudiarabia" target="_blank" href="https://www.tiktok.com/tag/saudiarabia?refer=embed">#saudiarabia</a> <a title="folkdance" target="_blank" href="https://www.tiktok.com/tag/folkdance?refer=embed">#folkdance</a> <a title="streetdance" target="_blank" href="https://www.tiktok.com/tag/streetdance?refer=embed">#streetdance</a> <a title="urbandance" target="_blank" href="https://www.tiktok.com/tag/urbandance?refer=embed">#urbandance</a> <a title="reels" target="_blank" href="https://www.tiktok.com/tag/reels?refer=embed">#reels</a> <a title="dance" target="_blank" href="https://www.tiktok.com/tag/dance?refer=embed">#dance</a> <a target="_blank" title="♬ Sabry Aalil - Sherine" href="https://www.tiktok.com/music/Sabry-Aalil-6969056894707042306?refer=embed">♬ Sabry Aalil - Sherine</a> </section> </blockquote> <script async src="https://www.tiktok.com/embed.js"></script>']
+   
     with analytics_tab:
         #insert grid of analytics
         a1,a2 = st.columns(2)
