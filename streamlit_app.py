@@ -10,12 +10,12 @@ from streamlit_extras.metric_cards import style_metric_cards
 from streamlit_extras.stylable_container import stylable_container
 import plotly.graph_objects as go
 import toml
-from streamlit_elements import elements, mui, html
+# from streamlit_elements import elements, mui, html
 import requests
 import pandas as pd
 from io import StringIO
-from types import SimpleNamespace
-from mui.dashboard import Dashboard, Editor, Card, DataGrid, Radar, Pie, Player
+# from types import SimpleNamespace
+# from mui.dashboard import Dashboard, Editor, Card, DataGrid, Radar, Pie, Player
 
 
 menu_content = """
@@ -571,7 +571,7 @@ def main_page():
     }
 
     </style>""", unsafe_allow_html=True)
-    map_tab, proj_specs_tab, analytics_tab = st.tabs(["Map", "Project Specifications", "Analytics"])
+    proj_specs_tab,map_tab,  analytics_tab = st.tabs(["Project Specifications","Map", "Analytics"])
     with map_tab    :
         col1, col2 = st.columns([3, 2])
 
@@ -680,59 +680,30 @@ def main_page():
 
         disable_back = (st.session_state.current_index <= 0)
         disable_next = (st.session_state.current_index + images_per_page >= len(image_urls))
-        # with st.expander('Larger Than Life'):
-        #     back_col, display1, display2, display3, next_col = st.columns([1.5,4,4,4,1.5])
-        #     # Check if we are at the beginning or end of the list
-        #
-        #     # Add images inside the scrollable container
-        #     with back_col:
-        #         if st.button("←", on_click=update_vals,disabled = disable_back):
-        #             st.session_state.current_index -=3
-        #     with next_col:
-        #         if st.button("→", on_click=update_vals, disabled = disable_next):
-        #             st.session_state.current_index +=3
-        #     st.write(st.session_state.current_index)
-        #     disable_back = (st.session_state.current_index <= 0)
-        #     disable_next = (st.session_state.current_index + images_per_page >= len(image_urls))
-        #     with display1:
-        #         st.image(image_urls[st.session_state.current_index])
-        #         st.write('A brief description')
-        #     with display2:
-        #         if st.session_state.current_index +1<n:
-        #             st.image(image_urls[st.session_state.current_index+1])
-        #             st.write('A brief description')
-        #             end_idx = st.session_state.current_index + 1
-        #     with display3:
-        #         if st.session_state.current_index +2<n:
-        #             st.image(image_urls[st.session_state.current_index+2])
-        #             st.write('A brief description')
-        #             end_idx = st.session_state.current_index +2
-        #
-        #     # Display the current index (optional)
-        #     st.write(f"Showing collections {st.session_state.current_index+1} to {end_idx+1} of {len(image_urls)}")
+
     with analytics_tab:
-        categories = ['Category A', 'Category B', 'Category C', 'Category D']
-        values = [10, 25, 15, 30]
-
-        if "w" not in st.session_state:
-            board = Dashboard()
-            w = SimpleNamespace(
-                dashboard=board,
-                editor=Editor(board, 0, 0, 6, 11, minW=3, minH=3),
-                player=Player(board, 0, 12, 6, 10, minH=5),
-                pie=Pie(board, 6, 0, 6, 7, minW=3, minH=4),
-                radar=Radar(board, 12, 7, 3, 7, minW=2, minH=4),
-                card=Card(board, 6, 7, 3, 7, minW=2, minH=4),
-                data_grid=DataGrid(board, 6, 13, 6, 7, minH=4),
-            )
-            state.w = w
-
-            w.editor.add_tab("Card content", Card.DEFAULT_CONTENT, "plaintext")
-            w.editor.add_tab("Data grid", json.dumps(DataGrid.DEFAULT_ROWS, indent=2), "json")
-            w.editor.add_tab("Radar chart", json.dumps(Radar.DEFAULT_DATA, indent=2), "json")
-            w.editor.add_tab("Pie chart", json.dumps(Pie.DEFAULT_DATA, indent=2), "json")
-        else:
-            w = st.session_state.w
+        # categories = ['Category A', 'Category B', 'Category C', 'Category D']
+        # values = [10, 25, 15, 30]
+        #
+        # if "w" not in st.session_state:
+        #     board = Dashboard()
+        #     w = SimpleNamespace(
+        #         dashboard=board,
+        #         editor=Editor(board, 0, 0, 6, 11, minW=3, minH=3),
+        #         player=Player(board, 0, 12, 6, 10, minH=5),
+        #         pie=Pie(board, 6, 0, 6, 7, minW=3, minH=4),
+        #         radar=Radar(board, 12, 7, 3, 7, minW=2, minH=4),
+        #         card=Card(board, 6, 7, 3, 7, minW=2, minH=4),
+        #         data_grid=DataGrid(board, 6, 13, 6, 7, minH=4),
+        #     )
+        #     state.w = w
+        #
+        #     w.editor.add_tab("Card content", Card.DEFAULT_CONTENT, "plaintext")
+        #     w.editor.add_tab("Data grid", json.dumps(DataGrid.DEFAULT_ROWS, indent=2), "json")
+        #     w.editor.add_tab("Radar chart", json.dumps(Radar.DEFAULT_DATA, indent=2), "json")
+        #     w.editor.add_tab("Pie chart", json.dumps(Pie.DEFAULT_DATA, indent=2), "json")
+        # else:
+        #     w = st.session_state.w
         #insert grid of analytics
         a1,a2 = st.columns(2)
         data = pd.DataFrame(abs(np.random.randn(24, 3)), columns=['Youths', 'Middle Aged', 'Seniors'])
