@@ -3,11 +3,12 @@ import folium
 from jinja2 import Template
 from branca.element import MacroElement
 import numpy as np
-from streamlit_folium import folium_static, st_folium
+from streamlit_folium import st_folium, folium_static
 import streamlit as st
 from streamlit_extras.metric_cards import style_metric_cards
 from streamlit_extras.stylable_container import stylable_container
 import plotly.graph_objects as go
+import plotly.express as px
 import toml
 # from streamlit_elements import elements, mui, html
 import requests
@@ -512,7 +513,56 @@ def login_page():
 def main_page():
     # onemap_tile_url = "	https://www.onemap.gov.sg/maps/tiles/Night_HD/{z}/{x}/{y}.png"
     # Initialize session state for selected markers
+    def plot_bar():
+        # Generate synthetic data for hours of the day
+        np.random.seed(42)
+        hours = pd.date_range(start="2023-01-01 00:00", end="2023-01-01 23:00", freq="H")
+        demographics = ['Youths','Middle-Aged','Seniors']
+        data = pd.DataFrame({
+            "Hour": hours.hour,
+            demographics[0]: np.random.randint(10, 50, size=len(hours)),
+            demographics[1]: np.random.randint(5, 30, size=len(hours)),
+            demographics[2]: np.random.randint(20, 60, size=len(hours)),
+        })
+        # Create a Plotly figure
+        fig = go.Figure()
 
+        # Add stacked bars for each category
+        fig.add_trace(go.Bar(
+            x=data["Hour"],
+            y=data[demographics[0]],
+            name=demographics[0],
+            marker_color="blue"
+        ))
+        fig.add_trace(go.Bar(
+            x=data["Hour"],
+            y=data[demographics[1]],
+            name=demographics[1],
+            marker_color="green"
+        ))
+        fig.add_trace(go.Bar(
+            x=data["Hour"],
+            y=data[demographics[2]],
+            name=demographics[2],
+            marker_color="red"
+        ))
+
+        # Configure the layout for stacking
+        fig.update_layout(
+            barmode="stack",  # Stacks bars vertically
+            xaxis=dict(
+                rangeslider=dict(visible=True),  # Add a range slider for zooming
+                type="category",  # Treat x-axis as categories (hours)
+                title="Hour of the Day"
+            ),
+            yaxis_title="Traffic",
+            title="",
+            legend_title="Categories",
+            title_x=0.5  # Center the title
+        )
+
+        # Render the Plotly chart in Streamlit
+        st.plotly_chart(fig, use_container_width=True)
     st.title("MadCowMap")
     if "selected_labels" not in st.session_state:
         st.session_state.selected_labels = []
@@ -568,10 +618,11 @@ def main_page():
     }
 
     </style>""", unsafe_allow_html=True)
-    proj_specs_tab, map_tab, analytics_tab = st.tabs(["Project Specifications","Map", "Analytics"])
+    map_tab,proj_specs_tab, analytics_tab = st.tabs(["Locations","Project Specifications", "Analytics"])
     # with proj_specs_tab:
-
+    # st_folium(m)
     with map_tab:
+        # st_folium(m)
         col1, col2 = st.columns([3, 2])
         with col1:
             folium.LayerControl().add_to(m)
@@ -593,8 +644,8 @@ def main_page():
                                                icon=customicon,
                                                tooltip=f'{row.Location}'
                                                ))
-            # with st.container(border = True):
-            map_component = st_folium(m, width=800, height=500, feature_group_to_add=fg)  # , feature_group_to_add=fg
+            with st.container(border = True):
+                map_component = st_folium(m, width=800, height=500, feature_group_to_add=fg)
             st.session_state.selected_id = map_component['last_object_clicked_tooltip']
         with col2:
             st.session_state.selected_labels = st.multiselect(
@@ -619,7 +670,6 @@ def main_page():
                     st.write(df.loc[df.Location == st.session_state.selected_id, 'Description'].iloc[0])
                     with st.container():
                         st.video(data=video_url)
-
     dances = [
         '<blockquote class="tiktok-embed" cite="https://www.tiktok.com/@yuki_dance_/video/7306857516044979457" data-video-id="7306857516044979457" style="max-width: 605px;min-width: 325px;" > <section> <a target="_blank" title="@yuki_dance_" href="https://www.tiktok.com/@yuki_dance_?refer=embed">@yuki_dance_</a> When you have friends that are willing to do crazy things with you 🤣 <a title="หลวงพี่แจ๊ส4g" target="_blank" href="https://www.tiktok.com/tag/%E0%B8%AB%E0%B8%A5%E0%B8%A7%E0%B8%87%E0%B8%9E%E0%B8%B5%E0%B9%88%E0%B9%81%E0%B8%88%E0%B9%8A%E0%B8%AA4g?refer=embed">#หลวงพี่แจ๊ส4g</a> <a title="หลวงพี่" target="_blank" href="https://www.tiktok.com/tag/%E0%B8%AB%E0%B8%A5%E0%B8%A7%E0%B8%87%E0%B8%9E%E0%B8%B5%E0%B9%88?refer=embed">#หลวงพี่</a> <a title="danceinpublic" target="_blank" href="https://www.tiktok.com/tag/danceinpublic?refer=embed">#danceinpublic</a> <a title="goyoung" target="_blank" href="https://www.tiktok.com/tag/goyoung?refer=embed">#goyoung</a> <a title="dancechallenge" target="_blank" href="https://www.tiktok.com/tag/dancechallenge?refer=embed">#dancechallenge</a> <a target="_blank" title="♬ original sound  - Yuki Dance" href="https://www.tiktok.com/music/original-sound-Yuki-Dance-7306857549872155393?refer=embed">♬ original sound  - Yuki Dance</a> </section> </blockquote> <script async src="https://www.tiktok.com/embed.js"></script>',
         '<blockquote class="tiktok-embed" cite="https://www.tiktok.com/@urbanverbunk/video/7438991737575492886" data-video-id="7438991737575492886" style="max-width: 605px;min-width: 325px;" > <section> <a target="_blank" title="@urbanverbunk" href="https://www.tiktok.com/@urbanverbunk?refer=embed">@urbanverbunk</a> RIYADH STREETS 🇸🇦🌃 We took our dance to downtown Riyadh to see how the locals would like it. We even got a little help from them!  @عثمان  @Sherine Abdelwahab  <a title="riyadh" target="_blank" href="https://www.tiktok.com/tag/riyadh?refer=embed">#riyadh</a> <a title="olayastreets" target="_blank" href="https://www.tiktok.com/tag/olayastreets?refer=embed">#olayastreets</a> <a title="localriyadh" target="_blank" href="https://www.tiktok.com/tag/localriyadh?refer=embed">#localriyadh</a> <a title="sherine" target="_blank" href="https://www.tiktok.com/tag/sherine?refer=embed">#sherine</a> <a title="sherineremix" target="_blank" href="https://www.tiktok.com/tag/sherineremix?refer=embed">#sherineremix</a> <a title="sabryaalil" target="_blank" href="https://www.tiktok.com/tag/sabryaalil?refer=embed">#sabryaalil</a> <a title="sherinesabryaalil" target="_blank" href="https://www.tiktok.com/tag/sherinesabryaalil?refer=embed">#sherinesabryaalil</a> <a title="urbanverbunk" target="_blank" href="https://www.tiktok.com/tag/urbanverbunk?refer=embed">#urbanverbunk</a> <a title="uv" target="_blank" href="https://www.tiktok.com/tag/uv?refer=embed">#uv</a> <a title="arabsgottalent" target="_blank" href="https://www.tiktok.com/tag/arabsgottalent?refer=embed">#arabsgottalent</a> <a title="riyadh" target="_blank" href="https://www.tiktok.com/tag/riyadh?refer=embed">#riyadh</a> <a title="saudiarabia" target="_blank" href="https://www.tiktok.com/tag/saudiarabia?refer=embed">#saudiarabia</a> <a title="folkdance" target="_blank" href="https://www.tiktok.com/tag/folkdance?refer=embed">#folkdance</a> <a title="streetdance" target="_blank" href="https://www.tiktok.com/tag/streetdance?refer=embed">#streetdance</a> <a title="urbandance" target="_blank" href="https://www.tiktok.com/tag/urbandance?refer=embed">#urbandance</a> <a title="reels" target="_blank" href="https://www.tiktok.com/tag/reels?refer=embed">#reels</a> <a title="dance" target="_blank" href="https://www.tiktok.com/tag/dance?refer=embed">#dance</a> <a target="_blank" title="♬ Sabry Aalil - Sherine" href="https://www.tiktok.com/music/Sabry-Aalil-6969056894707042306?refer=embed">♬ Sabry Aalil - Sherine</a> </section> </blockquote> <script async src="https://www.tiktok.com/embed.js"></script>']
@@ -698,39 +748,42 @@ def main_page():
         # else:
         #     w = st.session_state.w
         #insert grid of analytics
-        a1,a2 = st.columns(2)
+        a1,a2 = st.columns([1,1.2])
         data = pd.DataFrame(abs(np.random.randn(24, 3)), columns=['Youths', 'Middle Aged', 'Seniors'])
         height = 450
         with a1:
-            with stylable_container(
-                    key="container_with_border",
-                    css_styles="""
-                        {"""+f"""
-                           border-radius: 20px;
-                            border: 1px solid #ddd;
-                            height: {height}px
-                            padding: 10px;
-                            resize: both;
-                            overflow: auto;
-                       """+"""}
-                       """,
-            ):
+            # with stylable_container(
+            #         key="container_with_border",
+            #         css_styles="""
+            #             {"""+f"""
+            #                border-radius: 20px;
+            #                 border: 1px solid #ddd;
+            #                 height: {height}px
+            #                 padding: 10px;
+            #                 resize: both;
+            #                 overflow: auto;
+            #            """+"""}
+            #            """,
+            # ):
+            with st.container(border = True, height = height):
                 st.subheader("Hourly Foot Traffic")
+                # plot_bar()
                 st.bar_chart(data)
         with a2:
-            with stylable_container(
-                    key="container_with_border",
-                    css_styles="""
-                        {"""+f"""
-                           border-radius: 20px;
-                            border: 1px solid #ddd;
-                            height: {height}px
-                            padding: calc(1em + 10000px);
-                            resize: both;
-                            overflow: auto;
-                       """+"""}
-                       """,
-            ):
+            # with stylable_container(
+            #         key="container_with_border",
+            #         css_styles="""
+            #             {"""+f"""
+            #                border-radius: 20px;
+            #                 border: 1px solid #ddd;
+            #                 height: {height}px
+            #                 padding: calc(1em + 10000px);
+            #                 resize: both;
+            #                 overflow: auto;
+            #            """+"""}
+            #            """,
+            # ):
+            with st.container(border = True,height=height):
                 st.subheader("Project Outreach")
                 budget = st.slider("Select a budget value", min_value=0, max_value=100, value=50)
                 text1 = "Calculating Outreach"
@@ -753,10 +806,10 @@ def main_page():
                     manhours = round(budg * 50.718)
                     productions = max(int(budg / 25), 1)
                     pax = round(budg * 11.245)
-                    return [str(pax) + ' Pax', str(productions) + ' Productions', str(manhours) + ' Mins']
+                    return [str(pax), str(productions) , str(manhours) ]
 
                 metrics = calc_metrics(budget)
-                metric_names = ['Expected Outreach', 'Exhibits', 'Engagement']
+                metric_names = ['Outreach (Pax)', 'Exhibits (Productions)', 'Engagement (mins)']
                 c = st.columns(len(metrics))
                 for i in range(len(metrics)):
                     c[i].metric(label=metric_names[i], value=metrics[i])
