@@ -566,7 +566,7 @@ def main_page():
 
     </style>""", unsafe_allow_html=True)
     map_tab, proj_specs_tab, analytics_tab = st.tabs(["Map", "Project Specifications", "Analytics"])
-     with proj_specs_tab:
+    with proj_specs_tab:
         with st.expander('Flashmob'):
             flashmob_cols = st.columns(3)
             i=0
