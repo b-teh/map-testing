@@ -10,7 +10,6 @@ from streamlit_extras.stylable_container import stylable_container
 import plotly.graph_objects as go
 import toml
 # from streamlit_elements import elements, mui, html
-from streamlit_gsheets import GSheetsConnection
 import requests
 import pandas as pd
 from io import StringIO
