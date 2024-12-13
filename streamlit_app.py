@@ -8,15 +8,18 @@ import streamlit as st
 from streamlit_extras.metric_cards import style_metric_cards
 from streamlit_extras.stylable_container import stylable_container
 import plotly.graph_objects as go
+import seaborn as sns
+import matplotlib.pyplot as plt
 import plotly.express as px
 import toml
 # from streamlit_elements import elements, mui, html
+from streamlit_gsheets import GSheetsConnection
 import requests
 import pandas as pd
 from io import StringIO
 # from types import SimpleNamespace
 # from mui.dashboard import Dashboard, Editor, Card, DataGrid, Radar, Pie, Player
-
+import gspread
 
 menu_content = """
 <style>
@@ -90,6 +93,8 @@ video_format = 'mp4'
 logo_url = "https://github.com/b-teh/map-testing/blob/main/MadCow.png?raw=true"
 projects = ['Mowe']
 TITLE = 'MadCowMap'
+# Create a connection object to feedback sheet
+# conn = st.connection("gsheets", type=GSheetsConnection)
 def animate1():
     # Add a slider to choose the number of icons
     num_icons = st.slider("Select number of icons", min_value=1, max_value=20, value=10)
@@ -306,12 +311,8 @@ def animate():
 
 @st.cache_data
 def load_df():
-    #change code to load data accordingly
-    sheet_id = "17SfAJF4haKJn7Q3SDyvOZ8qYrYXBW4CzniWuvBvR_c0"
-    sheet_name = "Locations"
     # URL of the published Google Sheet (CSV format)
-    sheet_url = "https://docs.google.com/spreadsheets/d/17SfAJF4haKJn7Q3SDyvOZ8qYrYXBW4CzniWuvBvR_c0/export?format=csv&gid=1758088247"
-
+    sheet_url = st.secrets['locations_url']
     # Step 1: Get the data from the URL
     response = requests.get(sheet_url)
 
@@ -321,7 +322,13 @@ def load_df():
         csv_data = StringIO(response.text)
         df = pd.read_csv(csv_data)
     return df
-
+@st.cache_data
+def get_foot_traffic(locations):
+    foot_traffic = dict()
+    for loc in locations:
+        df = pd.read_csv(f'foot traffic/{loc}.csv')
+        foot_traffic[loc] = df
+    return foot_traffic
 def init_map(center=(1.352, 103.8198), zoom_start=13, map_type="OpenStreetMap"):
     return folium.Map(location=center, zoom_start=zoom_start, tiles=map_type)
 
@@ -572,6 +579,7 @@ def main_page():
         st.session_state.selection_order = []
     df = load_df()
     # create multiselection
+    foot_traffic = get_foot_traffic(list(df.Location))
     m = load_map()
 
     # init of selected location
@@ -673,13 +681,34 @@ def main_page():
                         """,
                 ):
                     # Add some content inside the container
-                    st.subheader(st.session_state.selected_id)
-                    st.write(df.loc[df.Location == st.session_state.selected_id, 'Description'].iloc[0])
-                    with st.container():
-                        st.video(data=video_url)
+                    # st.subheader(st.session_state.selected_id)
+                    # st.write(df.loc[df.Location == st.session_state.selected_id, 'Description'].iloc[0])
+                    #now include the part abput the heat map
+                    y = ['Mon','Tues','Wed','Thurs','Fri','Sat','Sun']
+                    used_traffic = foot_traffic[st.session_state.selected_id]
+                    x = used_traffic.columns[:]
+                    z = used_traffic.iloc[:,:].values
+                    # Create the heatmap
+                    fig = go.Figure(
+                        data=go.Heatmap(
+                            z=z,
+                            x=x,
+                            y=y,
+                            colorscale='Blues',
+                            hoverongaps=False,  # Ensures no hover annotations for missing data
+                            hovertemplate="Day: %{y}<br>Time: %{x}<br>Traffic: %{z}%<extra></extra>"  # Custom hover text
+                        )
+                    )
+                    fig.update_layout(
+                        title=f"Foot traffic for {st.session_state.selected_id}",
+                        template="plotly",
+                        width=400,  # Set desired width
+                        height=400  # Set desired height
+                    )
+                    st.plotly_chart(fig)
     dances = [
-        '<blockquote class="tiktok-embed" cite="https://www.tiktok.com/@yuki_dance_/video/7306857516044979457" data-video-id="7306857516044979457" style="max-width: 605px;min-width: 325px;" > <section> <a target="_blank" title="@yuki_dance_" href="https://www.tiktok.com/@yuki_dance_?refer=embed">@yuki_dance_</a> When you have friends that are willing to do crazy things with you 🤣 <a title="หลวงพี่แจ๊ส4g" target="_blank" href="https://www.tiktok.com/tag/%E0%B8%AB%E0%B8%A5%E0%B8%A7%E0%B8%87%E0%B8%9E%E0%B8%B5%E0%B9%88%E0%B9%81%E0%B8%88%E0%B9%8A%E0%B8%AA4g?refer=embed">#หลวงพี่แจ๊ส4g</a> <a title="หลวงพี่" target="_blank" href="https://www.tiktok.com/tag/%E0%B8%AB%E0%B8%A5%E0%B8%A7%E0%B8%87%E0%B8%9E%E0%B8%B5%E0%B9%88?refer=embed">#หลวงพี่</a> <a title="danceinpublic" target="_blank" href="https://www.tiktok.com/tag/danceinpublic?refer=embed">#danceinpublic</a> <a title="goyoung" target="_blank" href="https://www.tiktok.com/tag/goyoung?refer=embed">#goyoung</a> <a title="dancechallenge" target="_blank" href="https://www.tiktok.com/tag/dancechallenge?refer=embed">#dancechallenge</a> <a target="_blank" title="♬ original sound  - Yuki Dance" href="https://www.tiktok.com/music/original-sound-Yuki-Dance-7306857549872155393?refer=embed">♬ original sound  - Yuki Dance</a> </section> </blockquote> <script async src="https://www.tiktok.com/embed.js"></script>',
-        '<blockquote class="tiktok-embed" cite="https://www.tiktok.com/@urbanverbunk/video/7438991737575492886" data-video-id="7438991737575492886" style="max-width: 605px;min-width: 325px;" > <section> <a target="_blank" title="@urbanverbunk" href="https://www.tiktok.com/@urbanverbunk?refer=embed">@urbanverbunk</a> RIYADH STREETS 🇸🇦🌃 We took our dance to downtown Riyadh to see how the locals would like it. We even got a little help from them!  @عثمان  @Sherine Abdelwahab  <a title="riyadh" target="_blank" href="https://www.tiktok.com/tag/riyadh?refer=embed">#riyadh</a> <a title="olayastreets" target="_blank" href="https://www.tiktok.com/tag/olayastreets?refer=embed">#olayastreets</a> <a title="localriyadh" target="_blank" href="https://www.tiktok.com/tag/localriyadh?refer=embed">#localriyadh</a> <a title="sherine" target="_blank" href="https://www.tiktok.com/tag/sherine?refer=embed">#sherine</a> <a title="sherineremix" target="_blank" href="https://www.tiktok.com/tag/sherineremix?refer=embed">#sherineremix</a> <a title="sabryaalil" target="_blank" href="https://www.tiktok.com/tag/sabryaalil?refer=embed">#sabryaalil</a> <a title="sherinesabryaalil" target="_blank" href="https://www.tiktok.com/tag/sherinesabryaalil?refer=embed">#sherinesabryaalil</a> <a title="urbanverbunk" target="_blank" href="https://www.tiktok.com/tag/urbanverbunk?refer=embed">#urbanverbunk</a> <a title="uv" target="_blank" href="https://www.tiktok.com/tag/uv?refer=embed">#uv</a> <a title="arabsgottalent" target="_blank" href="https://www.tiktok.com/tag/arabsgottalent?refer=embed">#arabsgottalent</a> <a title="riyadh" target="_blank" href="https://www.tiktok.com/tag/riyadh?refer=embed">#riyadh</a> <a title="saudiarabia" target="_blank" href="https://www.tiktok.com/tag/saudiarabia?refer=embed">#saudiarabia</a> <a title="folkdance" target="_blank" href="https://www.tiktok.com/tag/folkdance?refer=embed">#folkdance</a> <a title="streetdance" target="_blank" href="https://www.tiktok.com/tag/streetdance?refer=embed">#streetdance</a> <a title="urbandance" target="_blank" href="https://www.tiktok.com/tag/urbandance?refer=embed">#urbandance</a> <a title="reels" target="_blank" href="https://www.tiktok.com/tag/reels?refer=embed">#reels</a> <a title="dance" target="_blank" href="https://www.tiktok.com/tag/dance?refer=embed">#dance</a> <a target="_blank" title="♬ Sabry Aalil - Sherine" href="https://www.tiktok.com/music/Sabry-Aalil-6969056894707042306?refer=embed">♬ Sabry Aalil - Sherine</a> </section> </blockquote> <script async src="https://www.tiktok.com/embed.js"></script>']
+'<blockquote class="tiktok-embed" cite="https://www.tiktok.com/@justmaiko/video/6842699291551599877" data-video-id="6842699291551599877" style="max-width: 605px;min-width: 325px;" > <section> <a target="_blank" title="@justmaiko" href="https://www.tiktok.com/@justmaiko?refer=embed">@justmaiko</a> yes, we got @jasonderulo to dance on the escalator with us to his song. Iconic? i think so😂🔥 @itsjonathanle @javierr <a target="_blank" title="♬ Savage Love (Laxed - Siren Beat) - Jawsh 685 &#38; Jason Derulo" href="https://www.tiktok.com/music/Savage-Love-Laxed-Siren-Beat-6825494114277100293?refer=embed">♬ Savage Love (Laxed - Siren Beat) - Jawsh 685 &#38; Jason Derulo</a> </section> </blockquote> <script async src="https://www.tiktok.com/embed.js"></script>',
+'<blockquote class="tiktok-embed" cite="https://www.tiktok.com/@orchardroadfashion/video/7295287742924131591" data-video-id="7295287742924131591" style="max-width: 605px;min-width: 325px;" > <section> <a target="_blank" title="@orchardroadfashion" href="https://www.tiktok.com/@orchardroadfashion?refer=embed">@orchardroadfashion</a> “What’s your jam” with @Vin @Myra Carel @H🍯NEY @ashlie0.2 @Arthur II 🇵🇭🇸🇬  Song: 3D. Y @AB_______JK_M____RST____Y_ featuring @Jack Harlow  <a title="orchardroadfashion" target="_blank" href="https://www.tiktok.com/tag/orchardroadfashion?refer=embed">#orchardroadfashion</a> <a target="_blank" title="♬ 3D (feat. Jack Harlow) - Jung Kook &#38; Jack Harlow" href="https://www.tiktok.com/music/3D-feat-Jack-Harlow-7283427877760190466?refer=embed">♬ 3D (feat. Jack Harlow) - Jung Kook &#38; Jack Harlow</a> </section> </blockquote> <script async src="https://www.tiktok.com/embed.js"></script>']
     with proj_specs_tab:
         with st.expander('Flashmob'):
             flashmob_cols = st.columns(3)
@@ -690,13 +719,19 @@ def main_page():
                         st.components.v1.html(dance, height=600)
                         i  = (i+1)%3
         pre = 'C:/Users/brand/OneDrive/Documents/Portfolio Documents/Marketing/'
+        # image_urls = [
+        #     '1ds53SpE-sR3UYtFjOd99rOa_0qC_BlqX',
+        #     '1CJy_i3JG0v5ZbpNJhSdH3Uacktw0ULW8',
+        #     '10Y5mS0uCKruzep2gVQsI-JVqAVzXqabX',
+        #     '1QXW4xl5YHAd5oqdF67D3YpqUrxj0QHDY',
+        #     '1pc0wVWHL_IcwFThXpfLvFJboANfsuWOv'
+        # ]#google images
         image_urls = [
-            'https://github.com/b-teh/map-testing/blob/main/IMG-20241112-WA0010.jpg?raw=true',
-            'https://github.com/b-teh/map-testing/blob/main/IMG-20241112-WA0011.jpg?raw=true',
-            'https://github.com/b-teh/map-testing/blob/main/IMG-20241112-WA0013.jpg?raw=true',
-            'https://github.com/b-teh/map-testing/blob/main/IMG-20241112-WA0014.jpg?raw=true',
+            'https://github.com/b-teh/map-testing/blob/main/LTL%20MOWE.jpg?raw=true',
             'https://github.com/b-teh/map-testing/blob/main/IMG-20241112-WA0015.jpg?raw=true',
-            'https://drive.google.com/uc?export=view&id=1pc0wVWHL_IcwFThXpfLvFJboANfsuWOv'
+            'https://github.com/b-teh/map-testing/blob/main/IMG-20241112-WA0014.jpg?raw=true',
+            'https://github.com/b-teh/map-testing/blob/main/IMG-20241112-WA0011.jpg?raw=true',
+            'https://github.com/b-teh/map-testing/blob/main/LTL%20MICROPHONE.PNG?raw=true'
         ]
 
         image_names = ['Image ' + str(i) for i in range(len(image_urls))]
@@ -704,12 +739,16 @@ def main_page():
         n_cols = 3
         i = 0
         index = 0
+
+
         with st.expander('Larger than Life'):
             cols = st.columns(n_cols)
             for im in image_urls:
                 with cols[i]:
                     with st.container(border = True):
-                        st.image(im)
+                        # url = f"https://drive.google.com/uc?export=view&id={im}"
+                        # response = requests.get(url) #google pull
+                        st.image(im,width=200)
                         # st.text_input('Input something', key = str(index))
                         st.checkbox("select", key=index)
                 i = (i + 1) % n_cols
@@ -837,10 +876,3 @@ else:
     login_page()
     if st.session_state.logged_in:
         main_page()
-
-
-
-
-
-
-
