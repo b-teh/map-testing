@@ -3,14 +3,11 @@ import folium
 from jinja2 import Template
 from branca.element import MacroElement
 import numpy as np
-from streamlit_folium import st_folium, folium_static
+from streamlit_folium import st_folium
 import streamlit as st
 from streamlit_extras.metric_cards import style_metric_cards
 from streamlit_extras.stylable_container import stylable_container
 import plotly.graph_objects as go
-import seaborn as sns
-import matplotlib.pyplot as plt
-import plotly.express as px
 import toml
 # from streamlit_elements import elements, mui, html
 from streamlit_gsheets import GSheetsConnection
@@ -876,3 +873,6 @@ else:
     login_page()
     if st.session_state.logged_in:
         main_page()
+
+
+
