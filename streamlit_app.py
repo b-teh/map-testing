@@ -516,6 +516,7 @@ def login_page():
 def main_page():
     # onemap_tile_url = "	https://www.onemap.gov.sg/maps/tiles/Night_HD/{z}/{x}/{y}.png"
     # Initialize session state for selected markers
+
     def plot_bar():
         # Generate synthetic data for hours of the day
         np.random.seed(42)
@@ -622,242 +623,225 @@ def main_page():
     }
 
     </style>""", unsafe_allow_html=True)
-    map_tab,proj_specs_tab, analytics_tab = st.tabs(["Locations","Project Specifications", "Analytics"])
+    show_tabs = [True, True, False]
+    all_tabs = ["Locations","Project Specifications", "Analytics"]
+    used_tabs = st.tabs([all_tabs[i] for i in range(len(all_tabs)) if show_tabs[i]])
+
     # with proj_specs_tab:
     # st_folium(m)
-    with map_tab:
-        # st_folium(m)
-        col1, col2 = st.columns([3, 2])
-        with col1:
-            folium.LayerControl().add_to(m)
-            click_for_marker = ClickForOneMarker()
-            m.add_child(click_for_marker)
+    if show_tabs[0]:
+        with used_tabs[0]:
+            # st_folium(m)
+            col1, col2 = st.columns([3, 2])
+            with col1:
+                folium.LayerControl().add_to(m)
+                click_for_marker = ClickForOneMarker()
+                m.add_child(click_for_marker)
 
-            # Refresh for marker selection to highlight
-            fg = folium.FeatureGroup(name="Markers")
-            for _, row in df.iterrows():
-                # Determine marker color based on whether it is selected or not
-                # Add the marker with custom popup and color
-                if row["Location"] in st.session_state.selected_labels:
-                    popup_content = create_popup(row.Latitude, row.Longitude, row.Location, row.Description, [], [])
-                    #     popup_content += return_stats_html([lat,long]) #add statistics
-                    popup = folium.Popup(popup_content, max_width=300)
-                    customicon = folium.features.CustomIcon(f"{row.Project}CircleHighlighted.png", icon_size=(30, 30))
-                    fg.add_child(folium.Marker(location=[row.Latitude, row.Longitude],
-                                               popup=popup,
-                                               icon=customicon,
-                                               tooltip=f'{row.Location}'
-                                               ))
-            with st.container(border = True):
-                map_component = st_folium(m, width=800, height=500, feature_group_to_add=fg)
-            st.session_state.selected_id = map_component['last_object_clicked_tooltip']
-        with col2:
-            st.session_state.selected_labels = st.multiselect(
-                "Select Locations",
-                options=df["Location"],
-                default=st.session_state.selection_order,  # Default to the recorded order
-            )
-            save_selected = st.button('Save Selection')
-            if save_selected:
-                with open("selected_options.txt", "w") as file:
-                    file.write("\n".join(st.session_state.selected_labels))  # Save each option on a new line
-                success_message = st.success("Selected options saved successfully!")
-                time.sleep(2)  # Wait for 3 seconds
-                success_message.empty()
-            if st.session_state.selected_id is not None:
-                with stylable_container(
-                        key="container_with_border",
-                        css_styles="""
-                        {
-                            border: 1px solid rgba(49, 51, 63, 0.2);
-                            border-radius: 0.5rem;
-                            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);  /* Shadow effect */
-                            padding: calc(1em - 1px)
-                        }
-                        """,
-                ):
-                    # Add some content inside the container
-                    # st.subheader(st.session_state.selected_id)
-                    # st.write(df.loc[df.Location == st.session_state.selected_id, 'Description'].iloc[0])
-                    #now include the part abput the heat map
-                    y = ['Mon','Tues','Wed','Thurs','Fri','Sat','Sun']
-                    used_traffic = foot_traffic[st.session_state.selected_id]
-                    x = used_traffic.columns[:]
-                    z = used_traffic.iloc[:,:].values
-                    # Create the heatmap
-                    fig = go.Figure(
-                        data=go.Heatmap(
-                            z=z,
-                            x=x,
-                            y=y,
-                            colorscale='Blues',
-                            hoverongaps=False,  # Ensures no hover annotations for missing data
-                            hovertemplate="Day: %{y}<br>Time: %{x}<br>Traffic: %{z}%<extra></extra>"  # Custom hover text
+                # Refresh for marker selection to highlight
+                fg = folium.FeatureGroup(name="Markers")
+                for _, row in df.iterrows():
+                    # Determine marker color based on whether it is selected or not
+                    # Add the marker with custom popup and color
+                    if row["Location"] in st.session_state.selected_labels:
+                        popup_content = create_popup(row.Latitude, row.Longitude, row.Location, row.Description, [], [])
+                        #     popup_content += return_stats_html([lat,long]) #add statistics
+                        popup = folium.Popup(popup_content, max_width=300)
+                        customicon = folium.features.CustomIcon(f"{row.Project}CircleHighlighted.png", icon_size=(30, 30))
+                        fg.add_child(folium.Marker(location=[row.Latitude, row.Longitude],
+                                                   popup=popup,
+                                                   icon=customicon,
+                                                   tooltip=f'{row.Location}'
+                                                   ))
+                with st.container(border = True):
+                    map_component = st_folium(m, width=800, height=500, feature_group_to_add=fg)
+                st.session_state.selected_id = map_component['last_object_clicked_tooltip']
+            with col2:
+                st.session_state.selected_labels = st.multiselect(
+                    "Select Locations",
+                    options=df["Location"],
+                    default=st.session_state.selection_order,  # Default to the recorded order
+                )
+                save_selected = st.button('Save Selection')
+                if save_selected:
+                    with open("selected_options.txt", "w") as file:
+                        file.write("\n".join(st.session_state.selected_labels))  # Save each option on a new line
+                    success_message = st.success("Selected options saved successfully!")
+                    time.sleep(2)  # Wait for 3 seconds
+                    success_message.empty()
+                if st.session_state.selected_id is not None:
+                    with stylable_container(
+                            key="container_with_border",
+                            css_styles="""
+                            {
+                                border: 1px solid rgba(49, 51, 63, 0.2);
+                                border-radius: 0.5rem;
+                                box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);  /* Shadow effect */
+                                padding: calc(1em - 1px)
+                            }
+                            """,
+                    ):
+                        # Add some content inside the container
+                        # st.subheader(st.session_state.selected_id)
+                        # st.write(df.loc[df.Location == st.session_state.selected_id, 'Description'].iloc[0])
+                        #now include the part abput the heat map
+                        y = ['Mon','Tues','Wed','Thurs','Fri','Sat','Sun']
+                        used_traffic = foot_traffic[st.session_state.selected_id]
+                        x = used_traffic.columns[:]
+                        z = used_traffic.iloc[:,:].values
+                        # Create the heatmap
+                        fig = go.Figure(
+                            data=go.Heatmap(
+                                z=z,
+                                x=x,
+                                y=y,
+                                colorscale='Blues',
+                                hoverongaps=False,  # Ensures no hover annotations for missing data
+                                hovertemplate="Day: %{y}<br>Time: %{x}<br>Traffic: %{z}%<extra></extra>"  # Custom hover text
+                            )
                         )
-                    )
-                    fig.update_layout(
-                        title=f"Foot traffic for {st.session_state.selected_id}",
-                        template="plotly",
-                        width=400,  # Set desired width
-                        height=400  # Set desired height
-                    )
-                    st.plotly_chart(fig)
+                        fig.update_layout(
+                            title=f"Foot traffic for {st.session_state.selected_id}",
+                            template="plotly",
+                            width=400,  # Set desired width
+                            height=400  # Set desired height
+                        )
+                        st.plotly_chart(fig)
     dances = [
 '<blockquote class="tiktok-embed" cite="https://www.tiktok.com/@justmaiko/video/6842699291551599877" data-video-id="6842699291551599877" style="max-width: 605px;min-width: 325px;" > <section> <a target="_blank" title="@justmaiko" href="https://www.tiktok.com/@justmaiko?refer=embed">@justmaiko</a> yes, we got @jasonderulo to dance on the escalator with us to his song. Iconic? i think so😂🔥 @itsjonathanle @javierr <a target="_blank" title="♬ Savage Love (Laxed - Siren Beat) - Jawsh 685 &#38; Jason Derulo" href="https://www.tiktok.com/music/Savage-Love-Laxed-Siren-Beat-6825494114277100293?refer=embed">♬ Savage Love (Laxed - Siren Beat) - Jawsh 685 &#38; Jason Derulo</a> </section> </blockquote> <script async src="https://www.tiktok.com/embed.js"></script>',
 '<blockquote class="tiktok-embed" cite="https://www.tiktok.com/@orchardroadfashion/video/7295287742924131591" data-video-id="7295287742924131591" style="max-width: 605px;min-width: 325px;" > <section> <a target="_blank" title="@orchardroadfashion" href="https://www.tiktok.com/@orchardroadfashion?refer=embed">@orchardroadfashion</a> “What’s your jam” with @Vin @Myra Carel @H🍯NEY @ashlie0.2 @Arthur II 🇵🇭🇸🇬  Song: 3D. Y @AB_______JK_M____RST____Y_ featuring @Jack Harlow  <a title="orchardroadfashion" target="_blank" href="https://www.tiktok.com/tag/orchardroadfashion?refer=embed">#orchardroadfashion</a> <a target="_blank" title="♬ 3D (feat. Jack Harlow) - Jung Kook &#38; Jack Harlow" href="https://www.tiktok.com/music/3D-feat-Jack-Harlow-7283427877760190466?refer=embed">♬ 3D (feat. Jack Harlow) - Jung Kook &#38; Jack Harlow</a> </section> </blockquote> <script async src="https://www.tiktok.com/embed.js"></script>']
-    with proj_specs_tab:
-        with st.expander('Flashmob'):
-            flashmob_cols = st.columns(3)
-            i=0
-            for dance in dances:
-                with flashmob_cols[i]:
-                    with st.container(border = True):
-                        st.components.v1.html(dance, height=600)
-                        i  = (i+1)%3
-        pre = 'C:/Users/brand/OneDrive/Documents/Portfolio Documents/Marketing/'
-        # image_urls = [
-        #     '1ds53SpE-sR3UYtFjOd99rOa_0qC_BlqX',
-        #     '1CJy_i3JG0v5ZbpNJhSdH3Uacktw0ULW8',
-        #     '10Y5mS0uCKruzep2gVQsI-JVqAVzXqabX',
-        #     '1QXW4xl5YHAd5oqdF67D3YpqUrxj0QHDY',
-        #     '1pc0wVWHL_IcwFThXpfLvFJboANfsuWOv'
-        # ]#google images
-        image_urls = [
-            'https://github.com/b-teh/map-testing/blob/main/LTL%20MOWE.jpg?raw=true',
-            'https://github.com/b-teh/map-testing/blob/main/IMG-20241112-WA0015.jpg?raw=true',
-            'https://github.com/b-teh/map-testing/blob/main/IMG-20241112-WA0014.jpg?raw=true',
-            'https://github.com/b-teh/map-testing/blob/main/IMG-20241112-WA0011.jpg?raw=true',
-            'https://github.com/b-teh/map-testing/blob/main/LTL%20MICROPHONE.PNG?raw=true'
-        ]
+    if show_tabs[1]:
+        with used_tabs[1]:
+            with st.expander('Flashmob'):
+                flashmob_cols = st.columns(3)
+                i=0
+                for dance in dances:
+                    with flashmob_cols[i]:
+                        with st.container(border = True):
+                            st.components.v1.html(dance, height=600)
+                            i  = (i+1)%3
+            pre = 'C:/Users/brand/OneDrive/Documents/Portfolio Documents/Marketing/'
+            # image_urls = [
+            #     '1ds53SpE-sR3UYtFjOd99rOa_0qC_BlqX',
+            #     '1CJy_i3JG0v5ZbpNJhSdH3Uacktw0ULW8',
+            #     '10Y5mS0uCKruzep2gVQsI-JVqAVzXqabX',
+            #     '1QXW4xl5YHAd5oqdF67D3YpqUrxj0QHDY',
+            #     '1pc0wVWHL_IcwFThXpfLvFJboANfsuWOv'
+            # ]#google images
+            image_urls = [
+                'https://github.com/b-teh/map-testing/blob/main/LTL%20MOWE.jpg?raw=true',
+                'https://github.com/b-teh/map-testing/blob/main/IMG-20241112-WA0015.jpg?raw=true',
+                'https://github.com/b-teh/map-testing/blob/main/IMG-20241112-WA0014.jpg?raw=true',
+                'https://github.com/b-teh/map-testing/blob/main/IMG-20241112-WA0011.jpg?raw=true',
+                'https://github.com/b-teh/map-testing/blob/main/LTL%20MICROPHONE.PNG?raw=true'
+            ]
 
-        image_names = ['Image ' + str(i) for i in range(len(image_urls))]
-        n = len(image_urls)
-        n_cols = 3
-        i = 0
-        index = 0
+            image_names = ['Image ' + str(i) for i in range(len(image_urls))]
+            n = len(image_urls)
+            n_cols = 3
+            i = 0
+            index = 0
 
 
-        with st.expander('Larger than Life'):
-            cols = st.columns(n_cols)
-            for im in image_urls:
-                with cols[i]:
-                    with st.container(border = True):
-                        # url = f"https://drive.google.com/uc?export=view&id={im}"
-                        # response = requests.get(url) #google pull
-                        st.image(im,width=200)
-                        # st.text_input('Input something', key = str(index))
-                        st.checkbox("select", key=index)
-                i = (i + 1) % n_cols
-                index += 1
-            comments = st.text_input("Input comments")
-        # Initialize session state variables for the index
-        if "current_index" not in st.session_state:
-            st.session_state.current_index = 0  # Index of the first image in the current set of images
+            with st.expander('Larger than Life'):
+                cols = st.columns(n_cols)
+                for im in image_urls:
+                    with cols[i]:
+                        with st.container(border = True):
+                            # url = f"https://drive.google.com/uc?export=view&id={im}"
+                            # response = requests.get(url) #google pull
+                            st.image(im,width=200)
+                            # st.text_input('Input something', key = str(index))
+                            st.checkbox("select", key=index)
+                    i = (i + 1) % n_cols
+                    index += 1
+                comments = st.text_input("Input comments")
+            # Initialize session state variables for the index
+            if "current_index" not in st.session_state:
+                st.session_state.current_index = 0  # Index of the first image in the current set of images
 
-        if "disable_next" not in st.session_state:
-            st.session_state.disable_next = False
-        if "disable_back" not in st.session_state:
-            st.session_state.disable_back = True
-        # Number of images to display per page
-        images_per_page = 3
+            if "disable_next" not in st.session_state:
+                st.session_state.disable_next = False
+            if "disable_back" not in st.session_state:
+                st.session_state.disable_back = True
+            # Number of images to display per page
+            images_per_page = 3
 
-        def update_vals():
-            st.session_state['disable_back'] = (st.session_state.current_index <= 3)
-            st.session_state['disable_next'] = ((st.session_state.current_index + images_per_page + 3) >= len(image_urls))
+            def update_vals():
+                st.session_state['disable_back'] = (st.session_state.current_index <= 3)
+                st.session_state['disable_next'] = ((st.session_state.current_index + images_per_page + 3) >= len(image_urls))
 
-        disable_back = (st.session_state.current_index <= 0)
-        disable_next = (st.session_state.current_index + images_per_page >= len(image_urls))
+            disable_back = (st.session_state.current_index <= 0)
+            disable_next = (st.session_state.current_index + images_per_page >= len(image_urls))
 
-    with analytics_tab:
-        # categories = ['Category A', 'Category B', 'Category C', 'Category D']
-        # values = [10, 25, 15, 30]
-        #
-        # if "w" not in st.session_state:
-        #     board = Dashboard()
-        #     w = SimpleNamespace(
-        #         dashboard=board,
-        #         editor=Editor(board, 0, 0, 6, 11, minW=3, minH=3),
-        #         player=Player(board, 0, 12, 6, 10, minH=5),
-        #         pie=Pie(board, 6, 0, 6, 7, minW=3, minH=4),
-        #         radar=Radar(board, 12, 7, 3, 7, minW=2, minH=4),
-        #         card=Card(board, 6, 7, 3, 7, minW=2, minH=4),
-        #         data_grid=DataGrid(board, 6, 13, 6, 7, minH=4),
-        #     )
-        #     state.w = w
-        #
-        #     w.editor.add_tab("Card content", Card.DEFAULT_CONTENT, "plaintext")
-        #     w.editor.add_tab("Data grid", json.dumps(DataGrid.DEFAULT_ROWS, indent=2), "json")
-        #     w.editor.add_tab("Radar chart", json.dumps(Radar.DEFAULT_DATA, indent=2), "json")
-        #     w.editor.add_tab("Pie chart", json.dumps(Pie.DEFAULT_DATA, indent=2), "json")
-        # else:
-        #     w = st.session_state.w
-        #insert grid of analytics
-        a1,a2 = st.columns([1,1.2])
-        data = pd.DataFrame(abs(np.random.randn(24, 3)), columns=['Youths', 'Middle Aged', 'Seniors'])
-        height = 450
-        with a1:
-            # with stylable_container(
-            #         key="container_with_border",
-            #         css_styles="""
-            #             {"""+f"""
-            #                border-radius: 20px;
-            #                 border: 1px solid #ddd;
-            #                 height: {height}px
-            #                 padding: 10px;
-            #                 resize: both;
-            #                 overflow: auto;
-            #            """+"""}
-            #            """,
-            # ):
-            with st.container(border = True, height = height):
-                st.subheader("Hourly Foot Traffic")
-                # plot_bar()
-                st.bar_chart(data)
-        with a2:
-            # with stylable_container(
-            #         key="container_with_border",
-            #         css_styles="""
-            #             {"""+f"""
-            #                border-radius: 20px;
-            #                 border: 1px solid #ddd;
-            #                 height: {height}px
-            #                 padding: calc(1em + 10000px);
-            #                 resize: both;
-            #                 overflow: auto;
-            #            """+"""}
-            #            """,
-            # ):
-            with st.container(border = True,height=height):
-                st.subheader("Project Outreach")
-                budget = st.slider("Select a budget value", min_value=0, max_value=100, value=50)
-                text1 = "Calculating Outreach"
-                text2 = "Sourcing Productions"
-                bar1 = st.progress(0, text=text1)
-                bar2 = st.progress(0, text=text2)
-                prog_rate = np.random.uniform(0.01, 0.03)
-                k = np.random.uniform(1.5, 2)
-                for i in range(101):
-                    bar1.progress(min(int(k * i), 100), text=text1)
-                    bar2.progress(i, text=text2)
-                    time.sleep(prog_rate)
+    if show_tabs[2]:
+        with used_tabs[2]:
+            a1,a2 = st.columns([1,1.2])
+            data = pd.DataFrame(abs(np.random.randn(24, 3)), columns=['Youths', 'Middle Aged', 'Seniors'])
+            height = 450
+            with a1:
+                # with stylable_container(
+                #         key="container_with_border",
+                #         css_styles="""
+                #             {"""+f"""
+                #                border-radius: 20px;
+                #                 border: 1px solid #ddd;
+                #                 height: {height}px
+                #                 padding: 10px;
+                #                 resize: both;
+                #                 overflow: auto;
+                #            """+"""}
+                #            """,
+                # ):
+                with st.container(border = True, height = height):
+                    st.subheader("Hourly Foot Traffic")
+                    # plot_bar()
+                    st.bar_chart(data)
+            with a2:
+                # with stylable_container(
+                #         key="container_with_border",
+                #         css_styles="""
+                #             {"""+f"""
+                #                border-radius: 20px;
+                #                 border: 1px solid #ddd;
+                #                 height: {height}px
+                #                 padding: calc(1em + 10000px);
+                #                 resize: both;
+                #                 overflow: auto;
+                #            """+"""}
+                #            """,
+                # ):
+                with st.container(border = True,height=height):
+                    st.subheader("Project Outreach")
+                    budget = st.slider("Select a budget value", min_value=0, max_value=100, value=50)
+                    text1 = "Calculating Outreach"
+                    text2 = "Sourcing Productions"
+                    bar1 = st.progress(0, text=text1)
+                    bar2 = st.progress(0, text=text2)
+                    prog_rate = np.random.uniform(0.01, 0.03)
+                    k = np.random.uniform(1.5, 2)
+                    for i in range(101):
+                        bar1.progress(min(int(k * i), 100), text=text1)
+                        bar2.progress(i, text=text2)
+                        time.sleep(prog_rate)
 
-                bar1.empty()
-                bar2.empty()
+                    bar1.empty()
+                    bar2.empty()
 
-                st.header("Project Details Dashboard")
+                    st.header("Project Details Dashboard")
 
-                def calc_metrics(budg):
-                    manhours = round(budg * 50.718)
-                    productions = max(int(budg / 25), 1)
-                    pax = round(budg * 11.245)
-                    return [str(pax), str(productions) , str(manhours) ]
+                    def calc_metrics(budg):
+                        manhours = round(budg * 50.718)
+                        productions = max(int(budg / 25), 1)
+                        pax = round(budg * 11.245)
+                        return [str(pax), str(productions) , str(manhours) ]
 
-                metrics = calc_metrics(budget)
-                metric_names = ['Outreach (Pax)', 'Exhibits (Productions)', 'Engagement (mins)']
-                c = st.columns(len(metrics))
-                for i in range(len(metrics)):
-                    c[i].metric(label=metric_names[i], value=metrics[i])
-                style_metric_cards(background_color="#FA8072", border_left_color="#F83C28")
+                    metrics = calc_metrics(budget)
+                    metric_names = ['Outreach (Pax)', 'Exhibits (Productions)', 'Engagement (mins)']
+                    c = st.columns(len(metrics))
+                    for i in range(len(metrics)):
+                        c[i].metric(label=metric_names[i], value=metrics[i])
+                    style_metric_cards(background_color="#FA8072", border_left_color="#F83C28")
 
 
 st.set_page_config(page_title="MadCowMap",
@@ -872,6 +856,3 @@ else:
     login_page()
     if st.session_state.logged_in:
         main_page()
-
-
-
