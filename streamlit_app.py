@@ -731,7 +731,7 @@ def main_page():
             image_urls = [
                 'https://github.com/b-teh/map-testing/blob/main/LTL%20MOWE.jpg?raw=true',
                 'https://github.com/b-teh/map-testing/blob/main/IMG-20241112-WA0015.jpg?raw=true',
-                'https://github.com/b-teh/map-testing/blob/main/IMG-20241112-WA0014.jpg?raw=true',
+                'https://github.com/b-teh/map-testing/blob/main/bag_logo.png?raw=true',
                 'https://github.com/b-teh/map-testing/blob/main/IMG-20241112-WA0011.jpg?raw=true',
                 'https://github.com/b-teh/map-testing/blob/main/LTL%20MICROPHONE.PNG?raw=true'
             ]
