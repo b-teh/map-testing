@@ -627,8 +627,7 @@ def main_page():
     all_tabs = ["Locations","Project Specifications", "Analytics"]
     used_tabs = st.tabs([all_tabs[i] for i in range(len(all_tabs)) if show_tabs[i]])
 
-    # with proj_specs_tab:
-    # st_folium(m)
+    #map tab
     if show_tabs[0]:
         with used_tabs[0]:
             # st_folium(m)
@@ -710,6 +709,7 @@ def main_page():
     dances = [
 '<blockquote class="tiktok-embed" cite="https://www.tiktok.com/@justmaiko/video/6842699291551599877" data-video-id="6842699291551599877" style="max-width: 605px;min-width: 325px;" > <section> <a target="_blank" title="@justmaiko" href="https://www.tiktok.com/@justmaiko?refer=embed">@justmaiko</a> yes, we got @jasonderulo to dance on the escalator with us to his song. Iconic? i think so😂🔥 @itsjonathanle @javierr <a target="_blank" title="♬ Savage Love (Laxed - Siren Beat) - Jawsh 685 &#38; Jason Derulo" href="https://www.tiktok.com/music/Savage-Love-Laxed-Siren-Beat-6825494114277100293?refer=embed">♬ Savage Love (Laxed - Siren Beat) - Jawsh 685 &#38; Jason Derulo</a> </section> </blockquote> <script async src="https://www.tiktok.com/embed.js"></script>',
 '<blockquote class="tiktok-embed" cite="https://www.tiktok.com/@orchardroadfashion/video/7295287742924131591" data-video-id="7295287742924131591" style="max-width: 605px;min-width: 325px;" > <section> <a target="_blank" title="@orchardroadfashion" href="https://www.tiktok.com/@orchardroadfashion?refer=embed">@orchardroadfashion</a> “What’s your jam” with @Vin @Myra Carel @H🍯NEY @ashlie0.2 @Arthur II 🇵🇭🇸🇬  Song: 3D. Y @AB_______JK_M____RST____Y_ featuring @Jack Harlow  <a title="orchardroadfashion" target="_blank" href="https://www.tiktok.com/tag/orchardroadfashion?refer=embed">#orchardroadfashion</a> <a target="_blank" title="♬ 3D (feat. Jack Harlow) - Jung Kook &#38; Jack Harlow" href="https://www.tiktok.com/music/3D-feat-Jack-Harlow-7283427877760190466?refer=embed">♬ 3D (feat. Jack Harlow) - Jung Kook &#38; Jack Harlow</a> </section> </blockquote> <script async src="https://www.tiktok.com/embed.js"></script>']
+    #project specs tab
     if show_tabs[1]:
         with used_tabs[1]:
             with st.expander('Flashmob'):
@@ -741,8 +741,6 @@ def main_page():
             n_cols = 3
             i = 0
             index = 0
-
-
             with st.expander('Larger than Life'):
                 cols = st.columns(n_cols)
                 for im in image_urls:
@@ -757,23 +755,30 @@ def main_page():
                     index += 1
                 comments = st.text_input("Input comments")
             # Initialize session state variables for the index
-            if "current_index" not in st.session_state:
-                st.session_state.current_index = 0  # Index of the first image in the current set of images
+            ordinary_collection_urls =['https://github.com/b-teh/map-testing/blob/main/Samples/IMG_7305.JPG?raw=true',
+                                       'https://github.com/b-teh/map-testing/blob/main/Samples/IMG_7312.JPG?raw=true',
+                                       'https://github.com/b-teh/map-testing/blob/main/Samples/IMG_7315.JPG?raw=true',
+                                       'https://github.com/b-teh/map-testing/blob/main/Samples/IMG_7317.JPG?raw=true',
+                                       'https://github.com/b-teh/map-testing/blob/main/Samples/IMG_7318.JPG?raw=true',
+                                       'https://github.com/b-teh/map-testing/blob/main/Samples/IMG_7319.JPG?raw=true',
+                                       'https://github.com/b-teh/map-testing/blob/main/Samples/IMG_7320.JPG?raw=true',
+                                       'https://github.com/b-teh/map-testing/blob/main/Samples/IMG_7323.JPG?raw=true',
+                                       'https://github.com/b-teh/map-testing/blob/main/Samples/IMG_7326.JPG?raw=true',
+                                       'https://github.com/b-teh/map-testing/blob/main/Samples/IMG_7328.JPG?raw=true',
+                                       'https://github.com/b-teh/map-testing/blob/main/Samples/IMG_7330.JPG?raw=true']
+            with st.expander('Ordinary Collection'):
+                cols = st.columns(4)
+                i=0
+                for im in ordinary_collection_urls:
+                    with cols[i]:
+                        with st.container(border=True):
+                            st.image(im, width=200)
+                            st.checkbox("select", key=index)
+                    i = (i + 1) % 4
+                    index += 1
 
-            if "disable_next" not in st.session_state:
-                st.session_state.disable_next = False
-            if "disable_back" not in st.session_state:
-                st.session_state.disable_back = True
-            # Number of images to display per page
-            images_per_page = 3
 
-            def update_vals():
-                st.session_state['disable_back'] = (st.session_state.current_index <= 3)
-                st.session_state['disable_next'] = ((st.session_state.current_index + images_per_page + 3) >= len(image_urls))
-
-            disable_back = (st.session_state.current_index <= 0)
-            disable_next = (st.session_state.current_index + images_per_page >= len(image_urls))
-
+    #analysis tab
     if show_tabs[2]:
         with used_tabs[2]:
             a1,a2 = st.columns([1,1.2])
@@ -856,3 +861,6 @@ else:
     login_page()
     if st.session_state.logged_in:
         main_page()
+
+
+
